@@ -10,7 +10,7 @@
 # - Provides: blimp_print_psr(), blimp_print_focal()
 # -------------------------------------------------------------------
 
-blimp_wrap <- function(formula,
+EMAuxiliary <- function(formula,
                        data,
                        id,
                        aux = NULL,
