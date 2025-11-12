@@ -1,0 +1,210 @@
+---
+title: "Step 3 – Modeling with EMAuxiliary: Demonstration Tutorial"
+author: "Stefan Schneider"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+# Overview
+
+This notebook illustrates **Step 3** of the *EMAuxiliary Workflow*: fitting multilevel models in **Blimp** using the `EMAuxiliary()` R function.  
+The examples below show how to estimate cross-level interactions, contextual moderation, and models that include auxiliary and categorical variables.
+
+**Models demonstrated**
+
+| Model | Description |
+|:------|:-------------|
+| **1** | Cross-level interaction (no auxiliaries) |
+| **2** | Contextual moderation by the latent mean of `x` |
+| **3** | Model 2 + auxiliary variables |
+| **4** | Model 3 + binary outcome, ordinal auxiliary, and nominal auxiliary (3 groups) |
+
+Each section includes a brief explanation and reproducible code.
+
+---
+
+# 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(rblimp)
+source("functions/EMAuxiliary.R")
+set.seed(1234)
+```
+
+---
+
+# 2. Simulate EMA-style data
+
+We simulate a two-level dataset (prompts within persons) with both within- and between-person variability and several auxiliary variables.
+
+```{r simulate}
+# Helper to generate variables with target ICC
+r_icc <- function(n_j, J, mu = 0, sd_b = 1, sd_w = 1) {
+  id <- rep(seq_len(J), each = n_j)
+  u_j <- rnorm(J, 0, sd_b)
+  x   <- mu + u_j[id] + rnorm(J * n_j, 0, sd_w)
+  data.frame(id, x)
+}
+
+J   <- 100
+n_j <- 6
+N   <- J * n_j
+
+# Level-2 predictor
+m <- rnorm(J, 0, 1)
+
+# Level-1 predictor with both within & between variance
+tmp <- r_icc(n_j, J, mu = 0, sd_b = 0.8, sd_w = 1.2)
+x   <- tmp$x
+id  <- tmp$id
+
+# Generate outcome y
+u0 <- rnorm(J, 0, 4.0)
+u1 <- rnorm(J, 0, 0.5)
+xbar <- ave(x, id)
+xw   <- x - xbar
+beta0 <- 25 + 0.5*m + u0
+beta1 <- -0.2 + 0.05*m + 0.05*xbar + u1
+y <- beta0[id] + beta1[id]*xw + rnorm(N, 0, 3.5)
+
+# Auxiliaries
+aux_cont <- scale(0.6*(rnorm(J))[id] + rnorm(N))
+aux_ord  <- rbinom(N, 1, plogis(-0.2 + 0.2*scale(x)))
+aux_nom  <- sample(c("A","B","C"), N, replace = TRUE, prob = c(.3,.4,.3))
+
+dat <- tibble(
+  id, y, x, m = m[id],
+  aux_cont, aux_ord, aux_nom
+)
+head(dat)
+```
+
+---
+
+# 3. Model 1 – Cross-level interaction (no auxiliaries)
+
+**Goal:** Estimate a random-slope model testing whether the within-person effect of `x` depends on a between-person moderator `m`.
+
+**Model specification**
+
+```text
+y ~ x + x.mean + m + x:m + (1 + x | id)
+```
+
+`x` = latent within-person component  
+`x.mean` = latent between-person component (person’s latent mean of x)
+
+```{r model1}
+fit1 <- EMAuxiliary(
+  y ~ x + x.mean + m + x:m + (1 + x | id),
+  data = dat, id = "id",
+  burn = 2000, iter = 2000
+)
+
+blimp_print_focal(fit1)
+blimp_print_psr(fit1)
+```
+
+---
+
+# 4. Model 2 – Contextual moderation by the latent mean of x
+
+**Goal:** Test whether the within-person slope of x varies as a function of the person’s latent mean of x.  
+This model adds the interaction `x * x.mean`.
+
+```text
+y ~ x * x.mean + m + (1 + x | id)
+```
+
+```{r model2}
+fit2 <- EMAuxiliary(
+  y ~ x * x.mean + m + (1 + x | id),
+  data = dat, id = "id",
+  burn = 2000, iter = 2000
+)
+
+blimp_print_focal(fit2)
+```
+
+---
+
+# 5. Model 3 – Adding auxiliary variables
+
+**Goal:** Re-estimate Model 2 including auxiliary variables to improve missing-data handling.  
+Auxiliary variables can have within-, between-, or mixed variance; `EMAuxiliary()` detects this automatically.
+
+```text
+y ~ x * x.mean + m + (1 + x | id)
+aux = c("aux_cont", "aux_ord")
+```
+
+```{r model3}
+fit3 <- EMAuxiliary(
+  y ~ x * x.mean + m + (1 + x | id),
+  data = dat, id = "id",
+  aux = c("aux_cont", "aux_ord"),
+  ordinal = "aux_ord",
+  burn = 2000, iter = 2000
+)
+
+blimp_print_psr(fit3)
+blimp_print_focal(fit3)
+```
+
+---
+
+# 6. Model 4 – Binary outcome and categorical auxiliaries
+
+**Goal:** Demonstrate handling of a **binary outcome** and both **ordinal** and **nominal** auxiliary variables.
+
+We create a binary version of y and use all three auxiliaries (`aux_cont`, `aux_ord`, `aux_nom`).
+
+```{r model4-data}
+dat <- dat %>%
+  mutate(y_bin = ifelse(y > median(y, na.rm = TRUE), 1L, 0L))
+```
+
+**Model specification**
+
+```text
+y_bin ~ x + x.mean + m + (1 + x | id)
+aux = c("aux_cont", "aux_ord", "aux_nom")
+```
+
+```{r model4}
+fit4 <- EMAuxiliary(
+  y_bin ~ x + x.mean + m + (1 + x | id),
+  data = dat, id = "id",
+  aux = c("aux_cont", "aux_ord", "aux_nom"),
+  ordinal = "aux_ord",
+  nominal = "aux_nom",
+  burn = 2000, iter = 2000
+)
+
+blimp_print_psr(fit4)
+blimp_print_focal(fit4)
+```
+
+---
+
+# 7. Practical notes
+
+- **Latent centering:** variables listed under `center_group` are automatically decomposed into within (`x`) and between (`x.mean`) components.  
+- **Auxiliary handling:** level detection and regression on focal components occur automatically.  
+- **Categorical variables:**  
+  - `ordinal` → probit models for binary/ordered auxiliaries  
+  - `nominal` → multinomial logistic models (lowest category = reference)  
+- **Convergence:** check the PSR column in the output (values < 1.05 ≈ converged).  
+- **Iterations:** for real analyses, use at least `burn = 10_000`, `iter = 20_000`.  
+- **Scaling:** predictors on roughly similar variances (~1) help MCMC mixing.
+
+---
+
+# 8. Session info
+
+```{r session-info}
+sessionInfo()
