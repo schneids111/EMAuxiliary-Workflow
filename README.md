@@ -51,6 +51,8 @@ EMAuxiliary-Workflow/
 
 │   └── EMAuxiliary.R
 
+│   └── EMAuxiliary Reference Manual.pdf
+
 ├── docs/                # optional rendered HTML or Word tutorials
 
 └── data/
