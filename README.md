@@ -47,25 +47,15 @@ EMAuxiliary-Workflow/
 
 ├── Step2_EvaluateAux.Rmd
 
+├── Step3_ExamplesEMAuxiliary.Rmd
+
 ├── functions/
 
 │   └── EMAuxiliary.R
 
 │   └── EMAuxiliary Reference Manual.pdf
 
-├── docs/                # optional rendered HTML or Word tutorials
-
-└── data/
-
-    └── ema_prepared.csv # example data output (optional)
     
-## 📊 Output Examples
-Step 1: compliance summaries and prompt-completion heatmaps
-
-Step 2: interactive ranking table of auxiliary variables
-
-Step 3: Blimp output files (.inp, .out) and model convergence diagnostics (PSR < 1.05)
-
 ## 📎 Citation and Archival Links
 GitHub repository (latest version): https://github.com/schneids111/EMAuxiliary-Workflow
 
