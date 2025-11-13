@@ -18,9 +18,10 @@ The examples below show how to estimate cross-level interactions, contextual mod
 | Model | Description |
 |:------|:-------------|
 | **1** | Cross-level interaction (no auxiliaries) |
-| **2** | Contextual moderation by the latent mean of `x` |
+| **2** | Cross-level interaction with latent mean centering |
 | **3** | Model 2 + auxiliary variables |
-| **4** | Model 3 + binary outcome, ordinal auxiliary, and nominal auxiliary (3 groups) |
+| **4** | Model 3 + binary outcome, binary predictor, ordinal and nominal auxiliary|
+| **5** | Checking model convergence|
 
 Each section includes a brief explanation and reproducible code.
 
@@ -28,10 +29,17 @@ Each section includes a brief explanation and reproducible code.
 
 # 1. Setup
 
+### 1. Installation and Requirements
+- **Blimp**: [Download Blimp](https://www.appliedmissingdata.com/blimp)  
+- **R interface for Blimp (rblimp)**: remotes::install_github("blimp-stats/rblimp")
+- **Load EMAuxiliary function from GitHub**: source("https://raw.githubusercontent.com/schneids111/EMAuxiliary-Workflow/main/functions/EMAuxiliary.R")
+
 ```{r setup, message=FALSE, warning=FALSE}
 library(dplyr)
+#remotes::install_github("blimp-stats/rblimp")
 library(rblimp)
-source("functions/EMAuxiliary.R")
+source("https://raw.githubusercontent.com/schneids111/EMAuxiliary-Workflow/main/functions/EMAuxiliary.R")
+
 set.seed(1234)
 ```
 
@@ -72,14 +80,33 @@ beta1 <- -0.2 + 0.05*m + 0.05*xbar + u1
 y <- beta0[id] + beta1[id]*xw + rnorm(N, 0, 3.5)
 
 # Auxiliaries
-aux_cont <- scale(0.6*(rnorm(J))[id] + rnorm(N))
+aux_cont1 <- scale(0.6*(rnorm(J))[id] + rnorm(N))
+aux_cont2 <- scale(0.5*(rnorm(J))[id] + rnorm(N))
 aux_ord  <- rbinom(N, 1, plogis(-0.2 + 0.2*scale(x)))
-aux_nom  <- sample(c("A","B","C"), N, replace = TRUE, prob = c(.3,.4,.3))
+aux_nom  <- sample(c(1,2,3), N, replace = TRUE, prob = c(.3,.4,.3))
 
 dat <- tibble(
   id, y, x, m = m[id],
-  aux_cont, aux_ord, aux_nom
+  aux_cont1, aux_cont2, aux_ord, aux_nom
 )
+# binary outcome y_bin
+dat <- dat %>%
+mutate(y_bin = ifelse(y > median(y, na.rm = TRUE), 1L, 0L))
+# binary predictor x_bin
+dat <- dat %>%
+  mutate(x_bin = ifelse(x > median(x, na.rm = TRUE), 1L, 0L))
+  
+## === impose missingness ===
+set.seed(123)
+miss_idx <- sample(seq_len(N), size = round(0.30 * N), replace = FALSE)
+
+# 30% missing on x
+dat$x[miss_idx] <- NA
+dat$x_bin[miss_idx] <- NA
+# y, y_bin missing whenever x missing
+dat$y[miss_idx]     <- NA
+dat$y_bin[miss_idx] <- NA
+
 head(dat)
 ```
 
@@ -87,26 +114,26 @@ head(dat)
 
 # 3. Model 1 – Cross-level interaction (no auxiliaries)
 
-**Goal:** Estimate a random-slope model testing whether the within-person effect of `x` depends on a between-person moderator `m`.
+**Goal:** Estimate a random-slope model testing whether the within-person effect of `x` depends on a grand-mean centered between-person moderator `m`.
 
 **Model specification**
 
 ```text
-y ~ x + x.mean + m + x:m + (1 + x | id)
+y ~ x + m + x:m + (1 + x | id)
 ```
-
-`x` = latent within-person component  
-`x.mean` = latent between-person component (person’s latent mean of x)
-
 ```{r model1}
 fit1 <- EMAuxiliary(
-  y ~ x + x.mean + m + x:m + (1 + x | id),
-  data = dat, id = "id",
-  burn = 2000, iter = 2000
+  y ~ x + m + x:m + (1 + x | id),
+  data = dat, id = "id", 
+  center_group = "x",
+  center_grand = "m",
+  burn = 5000, iter = 5000
 )
 
-blimp_print_focal(fit1)
-blimp_print_psr(fit1)
+cat(fit1$blimp_code)         # show generated BLIMP program code
+blimp_print_psr(fit1)         # PSR section only
+blimp_print_focal(fit1)      #  outcome section for focal analysis model only
+#rblimp::output(fit1$fit)      # full output
 ```
 
 ---
@@ -114,20 +141,26 @@ blimp_print_psr(fit1)
 # 4. Model 2 – Contextual moderation by the latent mean of x
 
 **Goal:** Test whether the within-person slope of x varies as a function of the person’s latent mean of x.  
-This model adds the interaction `x * x.mean`.
 
 ```text
-y ~ x * x.mean + m + (1 + x | id)
+y ~ x * x.mean + (1 + x | id)
 ```
+`x` = latent within-person component  
+`x.mean` = latent between-person component (person’s latent mean of x)
+
 
 ```{r model2}
 fit2 <- EMAuxiliary(
-  y ~ x * x.mean + m + (1 + x | id),
-  data = dat, id = "id",
-  burn = 2000, iter = 2000
+  y ~ x * x.mean + (1 + x | id),
+  data = dat, id = "id", 
+  center_group = "x",
+  burn = 5000, iter = 2000
 )
 
-blimp_print_focal(fit2)
+cat(fit2$blimp_code)         # show generated BLIMP program code
+blimp_print_psr(fit2)         # PSR section only
+blimp_print_focal(fit2)      #  outcome section for focal analysis model only
+#rblimp::output(fit2$fit)      # full output
 ```
 
 ---
@@ -138,70 +171,79 @@ blimp_print_focal(fit2)
 Auxiliary variables can have within-, between-, or mixed variance; `EMAuxiliary()` detects this automatically.
 
 ```text
-y ~ x * x.mean + m + (1 + x | id)
-aux = c("aux_cont", "aux_ord")
+y ~ x * x.mean + (1 + x | id)
+aux = c("aux_cont1", "aux_cont2")
 ```
 
 ```{r model3}
 fit3 <- EMAuxiliary(
-  y ~ x * x.mean + m + (1 + x | id),
-  data = dat, id = "id",
-  aux = c("aux_cont", "aux_ord"),
-  ordinal = "aux_ord",
-  burn = 2000, iter = 2000
+  y ~ x * x.mean + (1 + x | id),
+  data = dat, id = "id", center_group = "x",
+  aux = c("aux_cont1", "aux_cont2"),
+  burn = 5000, iter = 2000
 )
-
-blimp_print_psr(fit3)
-blimp_print_focal(fit3)
+cat(fit3$blimp_code)         # show generated BLIMP program code
+blimp_print_psr(fit3)         # PSR section only
+blimp_print_focal(fit3)      #  outcome section for focal analysis model only
+#rblimp::output(fit3$fit)      # full output
 ```
 
 ---
 
-# 6. Model 4 – Binary outcome and categorical auxiliaries
+# 6. Model 4 – Binary, ordinal, and nominal variables
 
-**Goal:** Demonstrate handling of a **binary outcome** and both **ordinal** and **nominal** auxiliary variables.
-
-We create a binary version of y and use all three auxiliaries (`aux_cont`, `aux_ord`, `aux_nom`).
-
-```{r model4-data}
-dat <- dat %>%
-  mutate(y_bin = ifelse(y > median(y, na.rm = TRUE), 1L, 0L))
-```
+**Goal:** Demonstrate handling of a **binary outcome**, **binary predictor (with latent mean centering)**, and both **ordinal** and **nominal** auxiliary variables.
 
 **Model specification**
 
 ```text
-y_bin ~ x + x.mean + m + (1 + x | id)
-aux = c("aux_cont", "aux_ord", "aux_nom")
+y_bin ~ x_bin + x_bin.mean + (1 + x | id)
+aux = c("aux_ord", "aux_nom")
+ordinal = c("y_bin", "x_bin "aux_ord")
+nominal = "aux_nom"
 ```
 
 ```{r model4}
 fit4 <- EMAuxiliary(
-  y_bin ~ x + x.mean + m + (1 + x | id),
+  y_bin ~ x_bin + x_bin.mean + (1 + x | id),
   data = dat, id = "id",
-  aux = c("aux_cont", "aux_ord", "aux_nom"),
-  ordinal = "aux_ord",
+  aux = c("aux_ord", "aux_nom"),
+  ordinal = c("y_bin", "aux_ord"),
   nominal = "aux_nom",
-  burn = 2000, iter = 2000
+  center_group = "x_bin",
+  burn = 9000, iter = 2000
 )
 
-blimp_print_psr(fit4)
-blimp_print_focal(fit4)
+cat(fit4$blimp_code)         # show generated BLIMP program code
+blimp_print_psr(fit4)         # PSR section only
+blimp_print_focal(fit4)      #  outcome section for focal analysis model only
+#rblimp::output(fit4$fit)      # full output
 ```
 
 ---
 
-# 7. Practical notes
+# 7. Model 5 - Convergence
 
-- **Latent centering:** variables listed under `center_group` are automatically decomposed into within (`x`) and between (`x.mean`) components.  
-- **Auxiliary handling:** level detection and regression on focal components occur automatically.  
-- **Categorical variables:**  
-  - `ordinal` → probit models for binary/ordered auxiliaries  
-  - `nominal` → multinomial logistic models (lowest category = reference)  
-- **Convergence:** check the PSR column in the output (values < 1.05 ≈ converged).  
-- **Iterations:** for real analyses, use at least `burn = 10_000`, `iter = 20_000`.  
-- **Scaling:** predictors on roughly similar variances (~1) help MCMC mixing.
+**Goal:** Demonstrate warning if proper model convergence was not achieved
 
+- **Note:** always check the PSR column in the output to ensure that the final value of PSR < 1.05.  
+- **Iterations:** for real analyses, use at least `burn = 10000`, `iter = 10000`, which are set as default.  
+- **Scaling:** predictors on roughly similar variances (~1.0) help MCMC mixing.
+Consider z-scaling y and the largest-SD predictors BEFORE calling EMAuxilary().
+
+```{r model5}
+fit5 <- EMAuxiliary(
+  y ~ x + m + x:m + (1 + x | id),
+  data = dat, id = "id", 
+  aux = c("aux_cont1"),
+  burn = 1000, iter = 2000
+)
+
+#cat(fit5$blimp_code)         # show generated BLIMP program code
+#blimp_print_psr(fit5)         # PSR section only
+#blimp_print_focal(fit5)      #  outcome section for focal analysis model only
+#rblimp::output(fit5$fit)      # full output
+```
 ---
 
 # 8. Session info
