@@ -180,7 +180,7 @@ fit3 <- EMAuxiliary(
   y ~ x * x.mean + (1 + x | id),
   data = dat, id = "id", center_group = "x",
   aux = c("aux_cont1", "aux_cont2"),
-  burn = 5000, iter = 2000
+  burn = 8000, iter = 2000
 )
 cat(fit3$blimp_code)         # show generated BLIMP program code
 blimp_print_psr(fit3)         # PSR section only
@@ -211,7 +211,7 @@ fit4 <- EMAuxiliary(
   ordinal = c("y_bin", "aux_ord"),
   nominal = "aux_nom",
   center_group = "x_bin",
-  burn = 9000, iter = 2000
+  burn = 20000, iter = 5000
 )
 
 cat(fit4$blimp_code)         # show generated BLIMP program code
