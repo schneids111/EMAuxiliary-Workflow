@@ -145,7 +145,7 @@ blimp_print_focal(fit1)      #  outcome section for focal analysis model only
 ```text
 y ~ x * x.mean + (1 + x | id)
 ```
-`x` = latent within-person component  
+`x` = latent within-person component (activated with center_group = "x")
 `x.mean` = latent between-person component (person’s latent mean of x)
 
 
@@ -173,6 +173,7 @@ Auxiliary variables can have within-, between-, or mixed variance; `EMAuxiliary(
 ```text
 y ~ x * x.mean + (1 + x | id)
 aux = c("aux_cont1", "aux_cont2")
+center_group = "x"
 ```
 
 ```{r model3}
@@ -197,20 +198,21 @@ blimp_print_focal(fit3)      #  outcome section for focal analysis model only
 **Model specification**
 
 ```text
-y_bin ~ x_bin + x_bin.mean + (1 + x | id)
+y_bin ~ x + x.mean + (1 + x | id)
 aux = c("aux_ord", "aux_nom")
-ordinal = c("y_bin", "x_bin "aux_ord")
+center_group = "x"
+ordinal = c("y_bin", "aux_ord")
 nominal = "aux_nom"
 ```
 
 ```{r model4}
 fit4 <- EMAuxiliary(
-  y_bin ~ x_bin + x_bin.mean + (1 + x | id),
+  y_bin ~ x + x.mean + (1 + x | id),
   data = dat, id = "id",
   aux = c("aux_ord", "aux_nom"),
   ordinal = c("y_bin", "aux_ord"),
   nominal = "aux_nom",
-  center_group = "x_bin",
+  center_group = "x",
   burn = 20000, iter = 5000
 )
 
