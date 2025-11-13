@@ -51,9 +51,9 @@ EMAuxiliary-Workflow/
 
 ├── functions/
 
-        └── EMAuxiliary.R
+├     └── EMAuxiliary.R
 
-        └── EMAuxiliary Reference Manual.pdf
+├     └── EMAuxiliary Reference Manual.pdf
 
     
 ## 📎 Citation and Archival Links
