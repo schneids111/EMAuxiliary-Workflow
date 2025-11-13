@@ -50,17 +50,17 @@ EMAuxiliary-Workflow/
 
 ├── functions/
 
-├     └── EMAuxiliary.R
+├        └── EMAuxiliary.R
 
-├     └── EMAuxiliary Reference Manual.pdf
+├        └── EMAuxiliary Reference Manual.pdf
 
 ├── example output files/
 
-├     └── Step1_PrepareEMA.html
+├        └── Step1_PrepareEMA.html
 
-├     └── Step2_AuxEval.html
+├        └── Step2_AuxEval.html
 
-├     └── Step3_ExamplesEMAuxiliary.html
+├        └── Step3_ExamplesEMAuxiliary.html
 
     
 ## 📎 Citation and Archival Links
