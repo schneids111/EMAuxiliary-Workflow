@@ -37,7 +37,23 @@ Step 2: Run Step2_AuxEval.Rmd using ema_prepared.csv as input. This will output 
 
 Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to generate a Blimp model that includes your selected auxiliaries. Run Step3_ExamplesEMAuxiliary.Rmd for tutorial.
 
+
 ## 📦 Repository Contents
+
+* 📁 **EMAuxiliary-Workflow/**
+    * 📄 `README.md`
+    * 📄 `Step1_PrepareEMA.Rmd`
+    * 📄 `Step2_AuxEval.Rmd`
+    * 📄 `Step3_ExamplesEMAuxiliary.Rmd`
+    * 📁 `functions/`
+        * 📄 `EMAuxiliary.R`
+        * 📄 `EMAuxiliary Reference Manual.pdf`
+    * 📁 `example output files/`
+        * 📄 `Step1_PrepareEMA.html`
+        * 📄 `Step2_AuxEval.html`
+        * 📄 `Step3_ExamplesEMAuxiliary.html`
+
+
 EMAuxiliary-Workflow/
 
 ├── README.md
