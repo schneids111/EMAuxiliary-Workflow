@@ -1,4 +1,4 @@
-# EMAuxiliary Workflow: Preparing, Evaluating, and Integrating Auxiliary Variables in EMA Data
+# EMAuxiliary Workflow: Preparing, Evaluating, and Integrating Auxiliary Variables in EMA Data Analyses
 
 This repository accompanies the paper:
 
