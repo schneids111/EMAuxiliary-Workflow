@@ -27,7 +27,7 @@ Each component is fully stand-alone and can be run independently, but the workfl
 - **R interface for Blimp (rblimp)**:
   ```r
   remotes::install_github("blimp-stats/rblimp")
-- **EMAuxiliary function from GitHub**:
+- **EMAuxiliary function**:
   ```r
   source("https://raw.githubusercontent.com/schneids111/EMAuxiliary-Workflow/main/functions/EMAuxiliary.R")
 
