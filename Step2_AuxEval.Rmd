@@ -87,7 +87,7 @@ Each section explains **what to do**, **why it matters**, and **how to interpret
 > It includes a **pure within** variable (`day_of_study`) and a **pure between** variable (`age`).
 > Remember to **comment this back out** when you switch to your own data.
 
-```{r, eval=FALSE}
+```{r}
 set.seed(123)
 ema_df <- data.frame(
   id = rep(1:6, each = 5),
@@ -105,7 +105,7 @@ ema_df$age <- rep(sample(45:75, 6, replace = TRUE), each = 5)
 # Small missingness model signal: longer completion_time and weekends increase missingness
 linpred <- (ema_df$completion_time - mean(ema_df$completion_time)) * 0.3 +
            0.25 * (ema_df$weekend - mean(ema_df$weekend))
-ema_df$missing <- rbinom(30, 1, plogis(linpred))
+ema_df$missed_prompt <- rbinom(30, 1, plogis(linpred))
 
 head(ema_df)
 ```
@@ -123,14 +123,14 @@ head(ema_df)
 ```{r}
 # 🔄 EDIT THESE NAMES to match your dataset
 aux_vars <- c(
-  "aux1", "aux2", "aux3" )
+  "time_of_day", "day_of_study", "weekend", "completion_time", "prompt_delay" )
 
 # Focal variables from your substantive model (e.g., outcome and/or predictors)
-focal_vars <- c("y", "x1")
+focal_vars <- c("negative_affect", "physical_activity", "sedentary_behavior")
 
 # Key identifiers
-id_var <- "idn"          # person identifier in your dataset
-missing_var <- "missing" # prompt-level missingness (1 = missing, 0 = completed)
+id_var <- "id"          # person identifier in your dataset
+missing_var <- "missed_prompt" # prompt-level missingness (1 = missing, 0 = completed)
 ```
 
 ---
