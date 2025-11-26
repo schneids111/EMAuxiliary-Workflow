@@ -217,16 +217,16 @@ Adjust the name of the prompt counter variable if necessary
 
 ```{r add-missing-prompts}
 # ---- USER INPUTS ----
-day_var    <- "day"           # set to NA if no day variable exists
-prompt_var <- "daily_prompt"  # OR "prompt_num" if using global counter
+day_var    <- NA            # set to NA if no day variable exists
+prompt_var <- "prompt_num"   # OR "prompt_num" if using a global counter
 # ----------------------
 
-# Validate prompt counter
+# ---- Validate prompt counter ----
 if (!prompt_var %in% names(ema_df)) {
   stop(paste0("Prompt variable '", prompt_var, "' not found in data."))
 }
 
-# Decide grouping structure
+# ---- Decide grouping structure ----
 if (!is.na(day_var) && day_var %in% names(ema_df)) {
   group_vars <- c("id", day_var)
   message("Using per-day prompt structure (id + day).")
@@ -235,39 +235,41 @@ if (!is.na(day_var) && day_var %in% names(ema_df)) {
   message("Using global prompt structure (id only).")
 }
 
-# Determine expected number of prompts per group
+# ---- Determine expected number of prompts ----
 expected_prompts <- ema_df %>%
   summarise(n_prom = max(.data[[prompt_var]], na.rm = TRUE)) %>%
   pull(n_prom)
 
-# Mark observed rows
-ema_df <- ema_df %>% mutate(missed_prompt = 0L)
+# ---- Mark originally observed rows (structural flag) ----
+ema_df <- ema_df %>%
+  mutate(observed_prompt = 1L)
 
-# Insert missing rows
+# ---- Insert missing prompt rows ----
 ema_df <- ema_df %>%
   group_by(across(all_of(group_vars))) %>%
-  complete(!!sym(prompt_var) := seq_len(expected_prompts)) %>%
+  tidyr::complete(!!sym(prompt_var) := seq_len(expected_prompts)) %>%
   ungroup()
 
-# If day exists, create global prompt_num
+# ---- If day exists, create global prompt_num ----
 if (!is.na(day_var) && day_var %in% names(ema_df)) {
   ema_df <- ema_df %>%
     mutate(
-      prompt_num = ( .data[[day_var]] - 1L ) * expected_prompts + .data[[prompt_var]]
+      prompt_num =
+        (.data[[day_var]] - 1L) * expected_prompts +
+        .data[[prompt_var]]
     )
 }
 
-# Identify missed prompts
+# ---- Structural identification of missed prompts ----
 ema_df <- ema_df %>%
   mutate(
-    missed_prompt = if_else(
-      is.na(mood) & is.na(stress),
-      1L, 0L
-    )
-  )
+    missed_prompt = if_else(is.na(observed_prompt), 1L, 0L)
+  ) %>%
+  select(-observed_prompt)   # remove helper column
 
-# Summary
+# ---- Summary table (QA check) ----
 ema_df %>% count(across(all_of(group_vars)), missed_prompt)
+
 
 ```
 
