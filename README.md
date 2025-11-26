@@ -11,9 +11,9 @@ This repository accompanies the paper:
 
 | Step | Purpose | Output / Next Input |
 |------|----------|---------------------|
-| **Step 1 – Prepare EMA Data** (`Step1_EMA_DataPrep.Rmd`) | Helps create a complete long-format EMA dataset where each scheduled prompt—completed or missed—is represented. Add lagged variables, within-person centering, and person-level data. | `ema_prepared.csv` |
-| **Step 2 – Evaluate Auxiliary Variables** (`Step2_AuxEval.Rmd`) | Evaluate and rank potential auxiliary variables based on prediction of missingness and correlations with focal variables. | ranked table of auxiliary variables |
-| **Step 3 – Fit Models with EMAuxiliary** (`Step3_ExamplesEMAuxiliary.Rmd`, `functions/EMAuxiliary.R`) | Incorporate selected auxiliaries into multilevel models in **Blimp**. | full Blimp output and model estimates |
+| **Step 1 – Prepare EMA Data** (`Step1_EMA_DataPrep.Rmd`) | Helps create a complete long-format EMA dataset where each scheduled prompt—completed or missed—is represented. Add rows for missed prompts, lagged variables, and person-level data. | Dataset with auxiliary variables |
+| **Step 2 – Evaluate Auxiliary Variables** (`Step2_AuxEval.Rmd`) | Evaluate potential auxiliary variables based on prediction of missingness and correlations with focal variables. | Auxiliary variable diagnostics |
+| **Step 3 – Fit Models with EMAuxiliary** (`Step3_ExamplesEMAuxiliary.Rmd`, `functions/EMAuxiliary.R`) | Incorporate selected auxiliaries into multilevel models in **Blimp**. | Full Blimp output and model estimates |
 
 Each component is fully stand-alone and can be run independently, but the workflow is designed to flow from one step to the next.
 
@@ -33,9 +33,9 @@ Each component is fully stand-alone and can be run independently, but the workfl
 
 ### 2. Using the Tutorials
    
-Step 1: Run relevant pieces of the notebook Step1_EMA_DataPrep.Rmd to reconstruct or simulate your EMA dataset and create ema_prepared.csv.
+Step 1: Run relevant pieces of the notebook Step1_EMA_DataPrep.Rmd to reconstruct or simulate your EMA dataset.
 
-Step 2: Run Step2_AuxEval.Rmd using ema_prepared.csv as input. This will output ranked candidate auxiliaries.
+Step 2: Run Step2_AuxEval.Rmd using your prepared data as input. This will generate detailed information and heatmaps showing how candidate auxiliaries relate to missingness and focal model variables.
 
 Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to generate a Blimp model that includes your selected auxiliaries. Run Step3_ExamplesEMAuxiliary.Rmd for tutorial.
 
