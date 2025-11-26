@@ -439,124 +439,260 @@ DT::datatable(
 
 ---
 
-## Step 8: Compute Summary Metrics and Rank Auxiliaries
+# *Step 8: Visual Heatmap of Auxiliary Variable Strength**
 
-**Goal:** Provide a **single overview table** for applied users.  
-- Convert ORs to **r-equivalent** effect sizes to put logistic and correlation results on a comparable metric.  
-- Use ICC classification to **select only the relevant level(s)** per auxiliary.  
-- Compute a **composite score** (mean of the two metrics) and **rank** auxiliaries.
+**What this shows:**
+This heatmap summarizes all quantitative evidence about each auxiliary variable in a single, intuitive visual format. The heatmap highlights the **pattern and magnitude** of associations across:
 
-**Note: weights for associations with missingness and associations with model variables can be adjusted below. The default is equal weights.
+* **Missingness prediction** (odds ratios converted to r-equivalent effect sizes)
+* **Correlations** with each focal variable
+
+Each auxiliary variable appears with both **within-person** and **between-person** components whenever those levels exist:
+* Pure **within-person** auxiliaries show only *within* tiles
+* Pure **between-person** auxiliaries show only *between* tiles
+* **Mixed** auxiliaries show a full set of tiles at both levels
+
+This visualization allows you to quickly evaluate which auxiliaries show meaningfully sized relationships—*and at which levels*. It supports empirically grounded decisions about which auxiliary variables to include in your model.
+
 ```{r}
-# ---- User-adjustable weights ----
-weight_missingness <- 1/2     # e.g., set to 0.67 to emphasize missingness predictors
-weight_correlations <- 1/2    # complement weight (must sum to 1 for equal scaling)
+## Step 8: Split-Panel Dual Heatmap (Missingness vs. Focal Variables)
 
-# Helper: convert odds ratio to r-equivalent effect size
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+
+# -------------------------------
+# Helper: mask by classification
+# -------------------------------
+
+mask_by_classification <- function(df, class_df) {
+  df %>%
+    left_join(class_df %>% select(variable, classification), by = "variable") %>%
+    mutate(
+      abs_r = case_when(
+        classification == "pure_within"  & level == "between" ~ NA_real_,
+        classification == "pure_between" & level == "within"  ~ NA_real_,
+        TRUE                                                    ~ abs_r
+      )
+    ) %>%
+    select(-classification)
+}
+
+# -------------------------------
+# Helper: OR → r-equivalent
+# -------------------------------
 to_r_from_logOR <- function(OR) {
   logOR <- log(OR)
   d     <- logOR * sqrt(3) / pi
-  r     <- d / sqrt(d^2 + 4)
-  return(r)
+  d / sqrt(d^2 + 4)
 }
 
-# 1) Mean |r|-equivalent from ORs, by level
-miss_by_level <- logit_results %>%
-  dplyr::mutate(r_equiv = to_r_from_logOR(OR)) %>%
-  dplyr::group_by(variable, level) %>%
-  dplyr::summarize(mean_abs_r_from_OR = mean(abs(r_equiv), na.rm = TRUE), .groups = "drop")
+# -------------------------------
+# 0. Common pieces: variables, labels
+# -------------------------------
 
-# 2) Mean |r| correlations, by level (across focal vars)
-cor_by_level <- cor_results %>%
-  dplyr::group_by(variable, level) %>%
-  dplyr::summarize(mean_abs_r = mean(abs(correlation), na.rm = TRUE), .groups = "drop")
+# Ensure we have a clean list of auxiliaries from ICC object
+aux_vars_all <- ema_icc$variable
 
-# 3) Pivot wide to have within/between columns
-miss_wide <- miss_by_level %>%
-  tidyr::pivot_wider(names_from = level, values_from = mean_abs_r_from_OR, names_prefix = "OR_r_")
-
-cor_wide <- cor_by_level %>%
-  tidyr::pivot_wider(names_from = level, values_from = mean_abs_r, names_prefix = "corr_")
-
-# 4) Combine and join ICCs
-summary_lvl <- dplyr::full_join(miss_wide, cor_wide, by = "variable") %>%
-  dplyr::left_join(ema_icc, by = "variable")
-
-# 5) Level-aware pooling per classification
-summary_lvl <- summary_lvl %>%
-  dplyr::mutate(
-    pooled_abs_r_from_OR = dplyr::case_when(
-      classification == "pure_within"  ~ OR_r_within,
-      classification == "pure_between" ~ OR_r_between,
-      classification == "mixed"        ~ rowMeans(cbind(OR_r_within, OR_r_between), na.rm = TRUE),
-      TRUE                             ~ rowMeans(cbind(OR_r_within, OR_r_between), na.rm = TRUE)
-    ),
-    pooled_abs_r = dplyr::case_when(
-      classification == "pure_within"  ~ corr_within,
-      classification == "pure_between" ~ corr_between,
-      classification == "mixed"        ~ rowMeans(cbind(corr_within, corr_between), na.rm = TRUE),
-      TRUE                             ~ rowMeans(cbind(corr_within, corr_between), na.rm = TRUE)
-    )
-  )
-
-# 6) Weighted composite score 
-summary_lvl <- summary_lvl %>%
+# Make a readable axis label that includes ICC
+ema_icc <- ema_icc %>%
   mutate(
-    weight_denom = (
-      weight_missingness * as.numeric(!is.na(pooled_abs_r_from_OR)) +
-      weight_correlations * as.numeric(!is.na(pooled_abs_r))
-    ),
-    overall_score = if_else(
-      weight_denom > 0,
-      (weight_missingness * pooled_abs_r_from_OR +
-         weight_correlations * pooled_abs_r) / weight_denom,
-      NA_real_
+    icc_label = ifelse(
+      is.na(ICC), 
+      paste0(variable, " (ICC = NA)"),
+      paste0(variable, " (ICC = ", sprintf("%.2f", ICC), ")")
     )
   )
-# ---- 7. Three separate rank orders ----
-summary_lvl <- summary_lvl %>%
-  dplyr::mutate(
-    rank_missingness = rank(-pooled_abs_r_from_OR, na.last = "keep"),
-    rank_correlation  = rank(-pooled_abs_r,        na.last = "keep"),
-    rank_combined     = rank(-overall_score,       na.last = "keep")
+
+# Fix ordering of auxiliaries (same for both panels)
+aux_order <- ema_icc$icc_label
+
+# -------------------------------
+# Panel 1: Missingness predictors
+# -------------------------------
+
+# Full grid: every variable x level
+miss_grid <- expand.grid(
+  variable = aux_vars_all,
+  level    = c("within", "between"),
+  stringsAsFactors = FALSE
+)
+
+# OR → |r|
+logit_r <- logit_results %>%
+  mutate(
+    abs_r = abs(to_r_from_logOR(OR))
+  ) %>%
+  select(variable, level, abs_r)
+
+# Merge grid and data, attach ICC + label
+miss_df <- miss_grid %>%
+  left_join(logit_r, by = c("variable", "level")) %>%
+    mask_by_classification(ema_icc) %>%   # <— ENFORCE PURE WITHIN/BETWEEN
+  left_join(ema_icc, by = "variable") %>%
+  mutate(
+    aux_label = factor(icc_label, levels = aux_order)
   )
+
+# Bin effect sizes for missingness (Option A thresholds)
+miss_df <- miss_df %>%
+  mutate(
+    bin = case_when(
+      is.na(abs_r)        ~ "NA",
+      abs_r < 0.05        ~ "< .05",
+      abs_r < 0.10        ~ ".05–.10",
+      abs_r < 0.20        ~ ".10–.20",
+      abs_r >= 0.20       ~ "> .20"
+    ),
+    bin = factor(bin, levels = c("< .05", ".05–.10", ".10–.20", "> .20", "NA"))
+  )
+
+# Gold palette for missingness
+palette_miss <- c(
+  "< .05"   = "white",
+  ".05–.10" = "#FFE599",  # pale gold
+  ".10–.20" = "#FFC000",  # medium gold
+  "> .20"   = "#C65911",  # deep amber
+  "NA"      = "#CCCCCC"   # gray for structural NA
+)
+
+p_missing <- ggplot(miss_df, aes(x = level, y = aux_label, fill = bin)) +
+  geom_tile(color = "grey70") +
+  scale_fill_manual(
+    values = palette_miss,
+    name   = "Abs(r) from OR\n(missingness)"
+  ) +
+  scale_x_discrete(position = "top") +
+  labs(
+    x = "Level",
+    y = NULL,
+    title    = "Missingness Prediction"
+   # subtitle = "Odds ratios converted to r-equivalent effect sizes (absolute value)."
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x  = element_text(angle = 0, hjust = 0.5, size = 14, face = "bold"),
+    axis.text.y  = element_text(size = 12),
+    axis.title.x = element_text(size = 14,face = "bold"),
+    panel.grid   = element_blank(),
+    plot.title.position = "plot",
+    plot.title   = element_text(face = "bold.italic")
+  )
+
+# -------------------------------
+# Panel 2: Correlations with focal variables
+# -------------------------------
+
+# Full grid: every auxiliary × level × focal_var
+cor_grid <- expand.grid(
+  variable  = aux_vars_all,
+  level     = c("between", "within"),   # consistent level order
+  focal_var = focal_vars,
+  stringsAsFactors = FALSE
+)
+
+# Absolute correlations
+corr_r <- cor_results %>%
+  mutate(abs_r = abs(correlation)) %>%
+  select(variable, level, focal_var, abs_r)
+
+# Merge + ICC labels
+cor_df <- cor_grid %>%
+  left_join(corr_r, by = c("variable", "level", "focal_var")) %>%
+    mask_by_classification(ema_icc) %>%   # <— ENFORCE PURE WITHIN/BETWEEN
+  left_join(ema_icc, by = "variable") %>%
+  mutate(
+    aux_label = factor(icc_label, levels = aux_order),
+    metric_raw = paste(focal_var, level, sep = "_")
+  )
+
+# -------------------------------
+# NEW: Correct desired ordering
+# -------------------------------
+
+# First all "between", then all "within", WITHIN each focal variable
+metric_levels <- c(
+  paste0(focal_vars, "_between"),
+  paste0(focal_vars, "_within")
+)
+
+cor_df <- cor_df %>%
+  mutate(metric = factor(metric_raw, levels = metric_levels))
+
+# -------------------------------
+# Binning effect sizes
+# -------------------------------
+cor_df <- cor_df %>%
+  mutate(
+    bin = case_when(
+      is.na(abs_r)        ~ "NA",
+      abs_r < 0.10        ~ "< .10",
+      abs_r < 0.20        ~ ".10–.20",
+      abs_r < 0.40        ~ ".20–.40",
+      abs_r >= 0.40       ~ "> .40"
+    ),
+    bin = factor(bin, levels = c("< .10", ".10–.20", ".20–.40", "> .40", "NA"))
+  )
+
+# -------------------------------
+# Blue palette for correlation heatmap
+# -------------------------------
+palette_cor <- c(
+  "< .10"   = "white",
+  ".10–.20" = "#C6DBEF",
+  ".20–.40" = "#6BAED6",
+  "> .40"   = "#08519C",
+  "NA"      = "#CCCCCC"
+)
+
+# -------------------------------
+# Panel 2 Plot
+# -------------------------------
+p_cor <- ggplot(cor_df, aes(x = metric, y = aux_label, fill = bin)) +
+  geom_tile(color = "grey70") +
+  scale_fill_manual(
+    values = palette_cor,
+    name   = "Abs(r)\nwith focal variables"
+  ) +
+  scale_x_discrete(position = "top") +
+  labs(
+    x = NULL,
+    y = NULL,
+    title    = "Correlations with Focal Variables"
+   # subtitle = "Between-person effects shown first, followed by within-person"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x  = element_text(angle = 45, vjust = 0, hjust = 0, size = 10),
+    axis.text.y  = element_text(size = 12),
+    panel.grid   = element_blank(),
+    plot.title.position = "plot", 
+    plot.title   = element_text(face = "bold.italic")
+  )
+
+# -------------------------------
+# Combine panels vertically
+# -------------------------------
+
+combo <- (p_missing / p_cor + 
+  plot_layout(heights = c(.9, 1)))
+
+# 1. Calculate height inside the code
+n_vars <- length(unique(heat_df$variable))
+h <- 3 + (n_vars * 2 * 0.2)
+
+# 2. Save explicitly to a file
+ggsave("heatmap.png", 
+       plot = combo, 
+       width = 10, 
+       height = h, 
+       limitsize = FALSE)
+
+# 3. Import the file back into the markdown
+knitr::include_graphics("heatmap.png")
 ```
 
----
-
-## Step 9: Summary Ranking Table (gt)
-
-**What this shows:** A compact overview with **(a)** mean |r|-equivalent from ORs, **(b)** mean |r| with focal variables, and **(c)** the composite score and rank.  
-**How to use:** This is **descriptive guidance**. Combine with **conceptual relevance** and **complementarity** when selecting auxiliaries.
-
-```{r}
-summary_lvl %>%
-  dplyr::transmute(
-    variable,
-    classification,
-    `Mean |r| from Missingness (logistic)` = round(pooled_abs_r_from_OR, 3),
-    `Mean |r| with Focal Vars`             = round(pooled_abs_r, 3),
-    `Composite Score`                      = round(overall_score, 3),
-    `Rank: Missingness`                    = rank_missingness,
-    `Rank: Correlation`                    = rank_correlation,
-    `Rank: Combined`                       = rank_combined
-  ) %>%
-  dplyr::arrange(`Rank: Combined`) %>%
-  gt::gt() %>%
-  gt::fmt_number(
-    columns = c(`Mean |r| from Missingness (logistic)`,
-                `Mean |r| with Focal Vars`,
-                `Composite Score`),
-    decimals = 3
-  ) %>%
-  gt::tab_header(
-    title = gt::md("**Auxiliary Variable Ranking Summary**"),
-    subtitle = gt::md("Three complementary ranks: Missingness, Correlation, and Combined (equal weighting).")
-  ) %>%
-  gt::tab_footnote(
-    footnote = "Ranks are descriptive only; include auxiliaries based on conceptual relevance and complementarity."
-  )
-```
 
 ---
 
@@ -565,7 +701,7 @@ summary_lvl %>%
 You now have two complementary views:
 
 1. **Interactive detailed table** — Explore ORs and signed correlations for each auxiliary × focal combination, with within/between side by side.  
-2. **Summary ranking table** — Prioritize auxiliaries by combined statistical evidence on a common r-scale, using level-aware pooling informed by ICCs.
+2. **Visual heatmap** — Prioritize auxiliaries by the strength of their relationships with missingness and focal variables on a common r-scale.
 
 Use both quantitative evidence **and** conceptual reasoning when deciding which auxiliaries to include.  
 The goal is to capture variables that meaningfully explain the missingness process and align with your substantive model.
