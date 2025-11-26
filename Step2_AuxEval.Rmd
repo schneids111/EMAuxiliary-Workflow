@@ -679,7 +679,7 @@ combo <- (p_missing / p_cor +
   plot_layout(heights = c(.9, 1)))
 
 # 1. Calculate height inside the code
-n_vars <- length(unique(heat_df$variable))
+n_vars <- length(unique(miss_df$variable))
 h <- 3 + (n_vars * 2 * 0.2)
 
 # 2. Save explicitly to a file
@@ -714,3 +714,4 @@ The goal is to capture variables that meaningfully explain the missingness proce
 - If a variable is **pure_within** (ICC < .05), between-level entries are set to `NA` by design.  
 - If a variable is **pure_between** (ICC > .95), within-level entries are set to `NA` by design.  
 - Logistic models in **Step 5** require at least ~20 usable rows per auxiliary; otherwise they are skipped.
+
