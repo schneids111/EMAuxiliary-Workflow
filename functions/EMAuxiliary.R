@@ -149,6 +149,27 @@ EMAuxiliary <- function(formula, data, id,
     bases_random <- .bw_strip_markers(bases_random)
   }
   
+  ###########################################################################
+  ### Prevent duplicate variables in focal model and aux list ###
+  ###########################################################################
+  
+  focal_vars <- unique(c(y_var, bases_fixed, bases_random))
+  
+  # Overlap check (excluding latent x.mean artifacts, handled earlier)
+  overlap_aux <- intersect(focal_vars, aux)
+  
+  if (length(overlap_aux) > 0) {
+    stop(
+      "[EMAuxiliary] ERROR: The following variable(s) appear BOTH in the focal model\n",
+      "formula and in the list of auxiliary variables:\n\n",
+      paste("  -", overlap_aux, collapse = "\n"),
+      "\n\nThis is not allowed because it changes the model structure and produces unintended\n",
+      "reciprocal regressions in the multivariate model. Please remove them from the 'aux' list.",
+      call. = FALSE
+    )
+  }
+  
+  
   # All variables user references in any argument:
   intended_vars <- unique(c(
     id,
