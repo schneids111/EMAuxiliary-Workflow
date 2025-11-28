@@ -139,6 +139,7 @@ missing_var <- "missed_prompt" # prompt-level missingness (1 = missing, 0 = comp
 
 **What this does:** Ensures all required names exist in the dataset.  
 **Why it matters:** Prevents cryptic errors later (e.g., misspellings or missing columns).
+**If you see warnings:** double-check your variable names
 
 ```{r data_check, message=TRUE, warning=TRUE}
 # 1) Verify dataset
@@ -444,8 +445,8 @@ DT::datatable(
 **What this shows:**
 This heatmap summarizes all quantitative evidence about each auxiliary variable in a single, intuitive visual format. The heatmap highlights the **pattern and magnitude** of associations across:
 
-* **Missingness prediction** (odds ratios converted to r-equivalent effect sizes)
-* **Correlations** with each focal variable
+* **Missingness prediction** (magnitude of odds ratios, blind for direction)
+* **Correlations** with each focal variable (absolute correlations)
 
 Each auxiliary variable appears with both **within-person** and **between-person** components whenever those levels exist:
 * Pure **within-person** auxiliaries show only *within* tiles
@@ -470,32 +471,21 @@ mask_by_classification <- function(df, class_df) {
   df %>%
     left_join(class_df %>% select(variable, classification), by = "variable") %>%
     mutate(
-      abs_r = case_when(
+      value = case_when(
         classification == "pure_within"  & level == "between" ~ NA_real_,
         classification == "pure_between" & level == "within"  ~ NA_real_,
-        TRUE                                                    ~ abs_r
+        TRUE                                                    ~ value
       )
     ) %>%
     select(-classification)
 }
 
 # -------------------------------
-# Helper: OR → r-equivalent
-# -------------------------------
-to_r_from_logOR <- function(OR) {
-  logOR <- log(OR)
-  d     <- logOR * sqrt(3) / pi
-  d / sqrt(d^2 + 4)
-}
-
-# -------------------------------
 # 0. Common pieces: variables, labels
 # -------------------------------
 
-# Ensure we have a clean list of auxiliaries from ICC object
 aux_vars_all <- ema_icc$variable
 
-# Make a readable axis label that includes ICC
 ema_icc <- ema_icc %>%
   mutate(
     icc_label = ifelse(
@@ -505,113 +495,108 @@ ema_icc <- ema_icc %>%
     )
   )
 
-# Fix ordering of auxiliaries (same for both panels)
 aux_order <- ema_icc$icc_label
 
-# -------------------------------
-# Panel 1: Missingness predictors
-# -------------------------------
 
-# Full grid: every variable x level
+# ============================================================
+# PANEL 1 — Missingness (OR-metric heatmap)
+# ============================================================
+
+# Grid: variable × level
 miss_grid <- expand.grid(
   variable = aux_vars_all,
   level    = c("within", "between"),
   stringsAsFactors = FALSE
 )
 
-# OR → |r|
-logit_r <- logit_results %>%
+# Convert OR to magnitude > 1 by flipping OR < 1
+logit_or <- logit_results %>%
   mutate(
-    abs_r = abs(to_r_from_logOR(OR))
+    OR_mag = exp(abs(log(OR)))   # always ≥ 1
   ) %>%
-  select(variable, level, abs_r)
+  select(variable, level, OR_mag)
 
-# Merge grid and data, attach ICC + label
 miss_df <- miss_grid %>%
-  left_join(logit_r, by = c("variable", "level")) %>%
-    mask_by_classification(ema_icc) %>%   # <— ENFORCE PURE WITHIN/BETWEEN
+  left_join(logit_or, by = c("variable", "level")) %>%
+  rename(value = OR_mag) %>%     # unify name for binning
+  mask_by_classification(ema_icc) %>%
   left_join(ema_icc, by = "variable") %>%
   mutate(
     aux_label = factor(icc_label, levels = aux_order)
   )
 
-# Bin effect sizes for missingness (Option A thresholds)
+# OR bins (your proposed interpretation)
 miss_df <- miss_df %>%
   mutate(
     bin = case_when(
-      is.na(abs_r)        ~ "NA",
-      abs_r < 0.05        ~ "< .05",
-      abs_r < 0.10        ~ ".05–.10",
-      abs_r < 0.20        ~ ".10–.20",
-      abs_r >= 0.20       ~ "> .20"
+      is.na(value)        ~ "NA",
+      value < 1.05        ~ "1.00–1.05",
+      value < 1.15        ~ "1.05–1.15",
+      value < 1.30        ~ "1.15–1.30",
+      value < 1.60        ~ "1.30–1.60",
+      value >= 1.60       ~ ">1.60"
     ),
-    bin = factor(bin, levels = c("< .05", ".05–.10", ".10–.20", "> .20", "NA"))
+    bin = factor(bin, levels = c("1.00–1.05","1.05–1.15","1.15–1.30","1.30–1.60",">1.60","NA"))
   )
 
-# Gold palette for missingness
+# Gold palette
 palette_miss <- c(
-  "< .05"   = "white",
-  ".05–.10" = "#FFE599",  # pale gold
-  ".10–.20" = "#FFC000",  # medium gold
-  "> .20"   = "#C65911",  # deep amber
-  "NA"      = "#CCCCCC"   # gray for structural NA
+  "1.00–1.05" = "white",
+  "1.05–1.15" = "#FFFFCC",
+  "1.15–1.30" = "#FFCC33",
+  "1.30–1.60" = "#FF9900",
+  ">1.60"     = "#994000",
+  "NA"        = "#CCCCCC"
 )
+
 
 p_missing <- ggplot(miss_df, aes(x = level, y = aux_label, fill = bin)) +
   geom_tile(color = "grey70") +
   scale_fill_manual(
     values = palette_miss,
-    name   = "Abs(r) from OR\n(missingness)"
+    drop = FALSE,
+    name   = "OR magnitude"
   ) +
   scale_x_discrete(position = "top") +
   labs(
     x = "Level",
     y = NULL,
-    title    = "Missingness Prediction"
-   # subtitle = "Odds ratios converted to r-equivalent effect sizes (absolute value)."
+    title = "Missingness Prediction -- Magnitude of Odds Ratios"
   ) +
   theme_minimal(base_size = 12) +
   theme(
-    axis.text.x  = element_text(angle = 0, hjust = 0.5, size = 14, face = "bold"),
+    axis.text.x  = element_text(size = 14, face = "bold"),
     axis.text.y  = element_text(size = 12),
-    axis.title.x = element_text(size = 14,face = "bold"),
     panel.grid   = element_blank(),
     plot.title.position = "plot",
     plot.title   = element_text(face = "bold.italic")
   )
 
-# -------------------------------
-# Panel 2: Correlations with focal variables
-# -------------------------------
 
-# Full grid: every auxiliary × level × focal_var
+# ============================================================
+# PANEL 2 — Correlations (r-metric heatmap)
+# ============================================================
+
 cor_grid <- expand.grid(
   variable  = aux_vars_all,
-  level     = c("between", "within"),   # consistent level order
+  level     = c("between", "within"),
   focal_var = focal_vars,
   stringsAsFactors = FALSE
 )
 
-# Absolute correlations
 corr_r <- cor_results %>%
-  mutate(abs_r = abs(correlation)) %>%
-  select(variable, level, focal_var, abs_r)
+  mutate(value = abs(correlation)) %>%
+  select(variable, level, focal_var, value)
 
-# Merge + ICC labels
 cor_df <- cor_grid %>%
-  left_join(corr_r, by = c("variable", "level", "focal_var")) %>%
-    mask_by_classification(ema_icc) %>%   # <— ENFORCE PURE WITHIN/BETWEEN
+  left_join(corr_r, by = c("variable","level","focal_var")) %>%
+  mask_by_classification(ema_icc) %>%
   left_join(ema_icc, by = "variable") %>%
   mutate(
     aux_label = factor(icc_label, levels = aux_order),
     metric_raw = paste(focal_var, level, sep = "_")
   )
 
-# -------------------------------
-# NEW: Correct desired ordering
-# -------------------------------
-
-# First all "between", then all "within", WITHIN each focal variable
 metric_levels <- c(
   paste0(focal_vars, "_between"),
   paste0(focal_vars, "_within")
@@ -620,24 +605,19 @@ metric_levels <- c(
 cor_df <- cor_df %>%
   mutate(metric = factor(metric_raw, levels = metric_levels))
 
-# -------------------------------
-# Binning effect sizes
-# -------------------------------
+# r bins
 cor_df <- cor_df %>%
   mutate(
     bin = case_when(
-      is.na(abs_r)        ~ "NA",
-      abs_r < 0.10        ~ "< .10",
-      abs_r < 0.20        ~ ".10–.20",
-      abs_r < 0.40        ~ ".20–.40",
-      abs_r >= 0.40       ~ "> .40"
+      is.na(value)       ~ "NA",
+      value < .10        ~ "< .10",
+      value < .20        ~ ".10–.20",
+      value < .40        ~ ".20–.40",
+      value >= .40       ~ "> .40"
     ),
-    bin = factor(bin, levels = c("< .10", ".10–.20", ".20–.40", "> .40", "NA"))
+    bin = factor(bin, levels = c("< .10",".10–.20",".20–.40","> .40","NA"))
   )
 
-# -------------------------------
-# Blue palette for correlation heatmap
-# -------------------------------
 palette_cor <- c(
   "< .10"   = "white",
   ".10–.20" = "#C6DBEF",
@@ -646,51 +626,47 @@ palette_cor <- c(
   "NA"      = "#CCCCCC"
 )
 
-# -------------------------------
-# Panel 2 Plot
-# -------------------------------
 p_cor <- ggplot(cor_df, aes(x = metric, y = aux_label, fill = bin)) +
   geom_tile(color = "grey70") +
   scale_fill_manual(
     values = palette_cor,
-    name   = "Abs(r)\nwith focal variables"
+    drop = FALSE,
+    name   = "Correlation |r|"
   ) +
   scale_x_discrete(position = "top") +
   labs(
     x = NULL,
     y = NULL,
-    title    = "Correlations with Focal Variables"
-   # subtitle = "Between-person effects shown first, followed by within-person"
+    title = "Absolute Correlations with Focal Variables"
   ) +
   theme_minimal(base_size = 12) +
   theme(
-    axis.text.x  = element_text(angle = 45, vjust = 0, hjust = 0, size = 10),
+    axis.text.x  = element_text(size = 10, angle = 45, hjust = 0, vjust = 0),
     axis.text.y  = element_text(size = 12),
     panel.grid   = element_blank(),
-    plot.title.position = "plot", 
+    plot.title.position = "plot",
     plot.title   = element_text(face = "bold.italic")
   )
 
-# -------------------------------
-# Combine panels vertically
-# -------------------------------
 
-combo <- (p_missing / p_cor + 
-  plot_layout(heights = c(.9, 1)))
+# ============================================================
+# Combine panels
+# ============================================================
 
-# 1. Calculate height inside the code
+combo <- (p_missing / p_cor) +
+  plot_layout(heights = c(.9, 1))
+
 n_vars <- length(unique(miss_df$variable))
-h <- 3 + (n_vars * 2 * 0.25)
+h <- 3 + (n_vars * 0.25 * 2)
 
-# 2. Save explicitly to a file
-ggsave("heatmap.png", 
-       plot = combo, 
-       width = 10, 
-       height = h, 
+ggsave("heatmap.png",
+       plot = combo,
+       width = 11,
+       height = h,
        limitsize = FALSE)
 
-# 3. Import the file back into the markdown
 knitr::include_graphics("heatmap.png")
+
 ```
 
 
@@ -701,18 +677,8 @@ knitr::include_graphics("heatmap.png")
 You now have two complementary views:
 
 1. **Interactive detailed table** — Explore ORs and signed correlations for each auxiliary × focal combination, with within/between side by side.  
-2. **Visual heatmap** — Prioritize auxiliaries by the strength of their relationships with missingness and focal variables on a common r-scale.
+2. **Visual heatmap** — Prioritize auxiliaries by the strength of their relationships with missingness and focal variables.
 
 Use both quantitative evidence **and** conceptual reasoning when deciding which auxiliaries to include.  
 The goal is to capture variables that meaningfully explain the missingness process and align with your substantive model.
-
----
-
-## Appendix: Troubleshooting Tips
-
-- If you see warnings in **Step 3a**, double-check variable names in **Step 2**.  
-- If a variable is **pure_within** (ICC < .05), between-level entries are set to `NA` by design.  
-- If a variable is **pure_between** (ICC > .95), within-level entries are set to `NA` by design.  
-- Logistic models in **Step 5** require at least ~20 usable rows per auxiliary; otherwise they are skipped.
-
 
