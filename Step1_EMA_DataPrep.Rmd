@@ -542,6 +542,23 @@ ema_df <- left_join(ema_df, iSD_df, by="id")
 
 # Part 5  Diagnostics and QA Visualizations
 
+This part provides quality-assurance checks to confirm that the reconstructed EMA dataset is correct after adding skipped prompts. These visualizations and summaries help you verify that:
+
+a) Each participant has the expected number of prompts per day.
+
+b)  The number of inserted rows matches the expected amount of missingness. For example, if the original dataset had ~30% missing prompts, then the heatmap should show roughly 30% of cells in red (missed) and 70% in blue (completed).
+
+c) Skips occur only where they make sense. For example, you should not see:
+      -entire days appearing “missed” when they shouldn’t be
+      -duplicated rows
+      -cases where participants suddenly have more prompts than scheduled
+      
+d) Add-row logic succeeded: 
+      -the dataset now has every scheduled prompt represented as a row,
+      -all inserted rows were correctly marked with missed_prompt = 1, and
+
+Together, these QA steps allow you to sanity-check the integrity of the reconstructed dataset before you proceed to Step 2 (evaluating auxiliary variables) or Step 3 (model fitting). If something looks off during this stage—such as too many red cells or the wrong number of prompts per day—it’s a sign to revisit Step 1 before moving forward.
+
 ```{r diagnostics}
 compliance <- ema_df %>%
   group_by(id) %>%
@@ -576,3 +593,4 @@ Proceed to **Step 2**: evaluate the utility of candidate auxiliary variables
 in predicting missingness using `ema_prepared.csv`.
 
 ---
+
