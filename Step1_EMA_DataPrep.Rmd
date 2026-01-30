@@ -170,7 +170,7 @@ Then your dataset must have **either**:
 - `prompt_num` (global running counter across study)
   
 **Optional (if available)**:
-- You may also include all three (`id`, `day`, `daily_prompt`, `prompt_num`)
+- You may also include all four (`id`, `day`, `daily_prompt`, `prompt_num`)
   if your dataset records both within-day and global numbering.
 
 ## How to rename your variables
@@ -183,7 +183,25 @@ ema_df <- ema_df %>%
     id           = participant_id,    # replace with your ID variable
     day          = study_day,         # replace only if you have a day variable
     daily_prompt = beep_of_the_day,   # replace only if you have within-day prompts
-    prompt_num   = running_beep       # replace only if you have a global counter
+    prompt_num   = running_beep,      # replace only if you have a global counter
+    datetime     = prompt_datetime    # replace only if you have a full date–time of each prompt (POSIXct; e.g., "2023-01-03 14:00:00")
+  )
+```
+
+## Note on datetime:
+The datetime variable must be a full date–time stamp (including both date and time), ideally stored as a POSIXct object.
+If your data include only time-of-day (e.g., "14:00") without a date, you will need to combine it with a (real of fake) study day or calendar date before using Options 2 or 3 below.
+
+Example: constructing datetime from day + time-of-day
+```{r createdatetime, eval = FALSE}
+ema_df <- ema_df %>%
+  mutate(
+    datetime = lubridate::make_datetime(
+      year  = 2023,
+      month = 1,
+      day   = day,
+      hour  = time_of_day_hours
+    )
   )
 ```
 
@@ -202,8 +220,8 @@ Depending on whether your study used fixed, semi-random, or fully random prompt 
 
 This option automatically adds rows for all skipped EMA prompts as long as your dataset contains a variable that numbers prompts in order. This may be either:
 
--  per-day numbering, e.g. id = 27, day = 3, prompt_num = 1,2,3,4,5,6
--  global consecutive numbering, e.g. id = 27, beep_num = 1…84 across all days
+-  per-day numbering, e.g. id = 27, day = 3, daily_prompt = 1,2,3,4,5,6
+-  global consecutive numbering, e.g. id = 27, prompt_num = 1…84 across all days
 
 The code below detects which structure the dataset has and inserts rows for any missing prompt numbers within the appropriate grouping (either id + day or id only).
 
@@ -217,8 +235,8 @@ Adjust the name of the prompt counter variable if necessary
 
 ```{r add-missing-prompts}
 # ---- USER INPUTS ----
-day_var    <- NA            # set to NA if no day variable exists
-prompt_var <- "prompt_num"   # OR "prompt_num" if using a global counter
+day_var    <- "day"            # set to NA if no day variable exists
+prompt_var <- "daily_prompt"   # OR "prompt_num" if using a global counter
 # ----------------------
 
 # ---- Validate prompt counter ----
@@ -288,13 +306,25 @@ Irregular Schedules (datetime expansion): For fixed schedules with known expecte
 ```{r eval = FALSE}
 expected_times_per_day <- c(8, 10, 12, 14, 16, 18)
 
-# Create a synthetic datetime if none exists
+# Create a synthetic datetime if none exists (demo-only fallback)
 if (!"datetime" %in% names(ema_df)) {
-  ema_df <- ema_df %>%
-    mutate(datetime = make_datetime(year = 2023, month = 1, day = day,
-                                    hour = 8 + 2 * (prompt_num - 1)))
-  message("No datetime column found — created synthetic timestamps using 2-hour spacing.")
+
+  if ("daily_prompt" %in% names(ema_df) && "day" %in% names(ema_df)) {
+    # Use daily_prompt (within-day index) + expected_times_per_day
+    ema_df <- ema_df %>%
+      mutate(datetime = make_datetime(
+        year = 2023, month = 1, day = day,
+        hour = expected_times_per_day[daily_prompt]
+      ))
+    message("No datetime column found — created synthetic timestamps using day + daily_prompt + expected_times_per_day.")
+
+  } else {
+    stop("No datetime column found. To use Option 2, you need either (a) an existing datetime column, or (b) day + daily_prompt so we can construct datetime from expected_times_per_day.")
+  }
 }
+
+# tag observed rows 
+ema_df <- ema_df %>% mutate(observed_prompt = 1L)
 
 expected_grid <- ema_df %>%
   distinct(id, day) %>%
@@ -303,15 +333,11 @@ expected_grid <- ema_df %>%
                                           hour = expected_times_per_day))) %>%
   unnest(expected_datetime)
 
-###end of creating data for demonstration
-
 ema_df <- expected_grid %>%
-  left_join(ema_df,
-            by = c("id", "day", "expected_datetime" = "datetime")) %>%
+  left_join(ema_df, by = c("id", "day", "expected_datetime" = "datetime")) %>%
   rename(datetime = expected_datetime) %>%
-  mutate(
-    missed_prompt = if_else(is.na(mood) & is.na(stress), 1L, 0L)
-  )
+  mutate(missed_prompt = if_else(is.na(observed_prompt), 1L, 0L)) %>%
+  select(-observed_prompt)
 ```
 
 ---
@@ -339,19 +365,21 @@ scheduled_df <- expand.grid(
 )
 
 completed_df <- scheduled_df %>%
-  filter(!(id == 1 & day == 1 & hour(scheduled_time) == 12)) %>%  # simulate a missed prompt
+  filter(!(id == 1 & day == 1 & lubridate::hour(scheduled_time) == 12)) %>%  # simulate a missed prompt
   mutate(response_time = scheduled_time,
          mood = rnorm(n(), 50, 10),
          stress = rnorm(n(), 50, 10))
 
 ###end of creating data for demonstration
 
+completed_df <- completed_df %>% mutate(observed_prompt = 1L)
+
 ema_df <- scheduled_df %>%
   left_join(completed_df, by = c("id", "day", "scheduled_time" = "response_time")) %>%
   rename(datetime = scheduled_time) %>%
-  mutate(
-    missed_prompt = if_else(rowSums(!is.na(across(where(is.numeric)))) == 0, 1L, 0L)
-  )
+  mutate(missed_prompt = if_else(is.na(observed_prompt), 1L, 0L)) %>%
+  select(-observed_prompt)
+
 ```
 
 ---
@@ -381,10 +409,26 @@ n_prompts_per_day <- 6     # number of prompts per day
 time_window_start <- 8     # first prompt window start hour (e.g., 8 AM)
 time_window_end   <- 20    # last prompt window end hour (e.g., 8 PM)
 
-# 1) Median observed hour for each prompt position (uses existing prompt_num)
+# ---- 0) Structural flag: mark originally observed rows ----
+ema_df <- ema_df %>%
+  dplyr::mutate(observed_prompt = 1L)
+
+# ---- 1) Create / identify a within-day prompt slot for median-time estimation ----
+# Prefer daily_prompt if it exists; otherwise derive prompt_slot from global prompt_num
+if ("daily_prompt" %in% names(ema_df)) {
+  ema_df <- ema_df %>% dplyr::mutate(prompt_slot = daily_prompt)
+} else if ("prompt_num" %in% names(ema_df)) {
+  # Assumes fixed n_prompts_per_day and that prompt_num is consecutive within person across days
+  ema_df <- ema_df %>%
+    dplyr::mutate(prompt_slot = ((prompt_num - 1L) %% n_prompts_per_day) + 1L)
+} else {
+  stop("Case 2 requires either 'daily_prompt' or 'prompt_num' to construct prompt slots.")
+}
+
+# ---- 2) Median observed hour for each prompt slot ----
 observed_times <- ema_df %>%
   dplyr::mutate(hour = lubridate::hour(datetime)) %>%
-  dplyr::group_by(prompt_num) %>%
+  dplyr::group_by(prompt_slot) %>%
   dplyr::summarise(median_hour = median(hour, na.rm = TRUE), .groups = "drop")
 
 # If any slots are missing, fill with evenly spaced hours across window
@@ -393,13 +437,9 @@ if (nrow(observed_times) < n_prompts_per_day || any(is.na(observed_times$median_
     prompt_slot = seq_len(n_prompts_per_day),
     median_hour = seq(time_window_start, time_window_end, length.out = n_prompts_per_day)
   )
-} else {
-  # standardize name to prompt_slot
-  observed_times <- observed_times %>%
-    dplyr::rename(prompt_slot = prompt_num)
 }
 
-# 2) Build full expected grid: every id/day × prompt_slot
+# ---- 3) Build full expected grid: every id/day × prompt_slot ----
 expected_grid <- ema_df %>%
   dplyr::distinct(id, day) %>%
   tidyr::expand_grid(prompt_slot = seq_len(n_prompts_per_day)) %>%
@@ -410,21 +450,20 @@ expected_grid <- ema_df %>%
     )
   )
 
-# 3) Merge expected grid to observed data, avoid duplicate prompt_num, flag misses
+# ---- 4) Merge expected grid to observed EMA data (structural identification of missing prompts) ----
 ema_df <- expected_grid %>%
   dplyr::left_join(
-    ema_df %>% dplyr::select(-dplyr::any_of("prompt_num")),
+    ema_df %>% dplyr::select(-dplyr::any_of(c("prompt_slot"))),
     by = c("id", "day", "expected_datetime" = "datetime")
   ) %>%
-  dplyr::rename(
-    datetime   = expected_datetime,
-    prompt_num = prompt_slot
-  ) %>%
+  dplyr::rename(datetime = expected_datetime) %>%
   dplyr::mutate(
-    missed_prompt = dplyr::if_else(is.na(mood) & is.na(stress), 1L, 0L)
-  )
+    missed_prompt = dplyr::if_else(is.na(observed_prompt), 1L, 0L),
+    prompt_num    = prompt_slot   # optional: treat slot as per-day prompt index after reconstruction
+  ) %>%
+  dplyr::select(-observed_prompt)  # drop helper flag
 
-# 4) Quick check
+# ---- 5) Quick check ----
 ema_df %>%
   dplyr::group_by(id, day) %>%
   dplyr::summarise(
@@ -542,7 +581,7 @@ ema_df <- left_join(ema_df, iSD_df, by="id")
 
 # Part 5  Diagnostics and QA Visualizations
 
-This part provides quality-assurance checks to confirm that the reconstructed EMA dataset is correct after adding skipped prompts. These visualizations and summaries help you verify that:
+Part 5 provides quality-assurance checks to confirm that the reconstructed EMA dataset is correct after adding skipped prompts. These visualizations and summaries help you verify that:
 
 a) Each participant has the expected number of prompts per day.
 
@@ -582,15 +621,13 @@ plot(gg)
 # Part 6  Export Prepared Data
 
 ```{r export}
-write.csv(ema_df, "ema_prepared.csv", row.names = FALSE)
-write.csv(iSD_df, "ema_personlevel_iSD.csv", row.names = FALSE)
+save (ema_df, file="ema_prepared.rda")
 ```
 
 ---
 
 # Part 7  Next Step
 Proceed to **Step 2**: evaluate the utility of candidate auxiliary variables
-in predicting missingness using `ema_prepared.csv`.
+in predicting missingness using `ema_prepared.rda`.
 
 ---
-
