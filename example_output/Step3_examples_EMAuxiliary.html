@@ -1493,16 +1493,17 @@ Demonstration Tutorial</h1>
 function.<br />
 The examples below show how to estimate cross-level interactions,
 contextual moderation, and models that include auxiliary and categorical
-variables.</p>
-<p><strong>Models demonstrated</strong></p>
+variables. Each example is a stand-alone demonstration of common
+modeling issues. They are not presented to be run in sequence.</p>
+<p><strong>Examples demonstrated</strong></p>
 <table>
 <colgroup>
-<col width="33%" />
-<col width="66%" />
+<col width="39%" />
+<col width="60%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="left">Model</th>
+<th align="left">Example</th>
 <th align="left">Description</th>
 </tr>
 </thead>
@@ -1513,20 +1514,22 @@ variables.</p>
 </tr>
 <tr class="even">
 <td align="left"><strong>2</strong></td>
-<td align="left">Cross-level interaction with latent mean centering</td>
+<td align="left">Cross-level interaction with latent mean centering (no
+auxiliaries)</td>
 </tr>
 <tr class="odd">
 <td align="left"><strong>3</strong></td>
-<td align="left">Model 2 + auxiliary variables</td>
+<td align="left">Same cross-level interaction, with auxiliary variables
+added</td>
 </tr>
 <tr class="even">
 <td align="left"><strong>4</strong></td>
-<td align="left">Model 3 + binary outcome, binary predictor, ordinal and
-nominal auxiliary</td>
+<td align="left">Specification of a binary outcome and ordinal and
+nominal auxiliary variables</td>
 </tr>
 <tr class="odd">
 <td align="left"><strong>5</strong></td>
-<td align="left">Checking model convergence</td>
+<td align="left">Poor model convergence</td>
 </tr>
 </tbody>
 </table>
@@ -1630,8 +1633,8 @@ head(dat)</code></pre>
 ## # ℹ 1 more variable: x_bin &lt;int&gt;</code></pre>
 <hr />
 </div>
-<div id="model-1-cross-level-interaction-no-auxiliaries" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> 3. Model 1 –
+<div id="example-1-cross-level-interaction-no-auxiliaries" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> 3. Example 1 –
 Cross-level interaction (no auxiliaries)</h1>
 <p><strong>Goal:</strong> Estimate a random-slope model testing whether
 the within-person effect of <code>x</code> depends on a grand-mean
@@ -1642,13 +1645,12 @@ centered between-person moderator <code>m</code>.</p>
   y ~ x + m + x:m + (1 + x | id),
   data = dat, id = &quot;id&quot;, 
   center_group = &quot;x&quot;,
-  center_grand = &quot;m&quot;,
-  burn = 8000, iter = 2000
+  center_grand = &quot;m&quot;
 )</code></pre>
 <pre><code>## Auxiliaries route: no-aux</code></pre>
 <pre><code>## ! Converting data to `data.farme`</code></pre>
 <pre><code>## → Checking for Blimp Update...</code></pre>
-<pre class="r"><code>cat(fit1$blimp_code)         # show generated BLIMP program code</code></pre>
+<pre class="r"><code>cat(fit1$blimp_code)           # show generated BLIMP program code</code></pre>
 <pre><code>## DATA: &lt;in-memory by rblimp&gt;;
 ## VARIABLES: id y x m;
 ## CLUSTERID: id;
@@ -1659,10 +1661,10 @@ centered between-person moderator <code>m</code>.</p>
 ##   y ~ x m x*m | x;
 ## 
 ## SEED: 12345;
-## BURN: 8000;
-## ITER: 2000;
+## BURN: 10000;
+## ITER: 10000;
 ## CHAINS: 2;</code></pre>
-<pre class="r"><code>blimp_print_psr(fit1)         # PSR section only</code></pre>
+<pre class="r"><code>blimp_print_psr(fit1)          # PSR section only</code></pre>
 <pre><code>## ---- PSR section ----
 ## BURN-IN POTENTIAL SCALE REDUCTION (PSR) OUTPUT:
 ## 
@@ -1670,30 +1672,30 @@ centered between-person moderator <code>m</code>.</p>
 ##         iterations to create twice as many chains.
 ## 
 ##   Comparing iterations across 2 chains     Highest PSR   Parameter #  
-##                           201 to 400             1.354            11  
-##                           401 to 800             1.136            11  
-##                           601 to 1200            1.121            11  
-##                           801 to 1600            1.104            11  
+##                           251 to 500             1.157            18  
+##                           501 to 1000            1.147            11  
+##                           751 to 1500            1.105            11  
 ##                          1001 to 2000            1.039            18  
-##                          1201 to 2400            1.022            16  
-##                          1401 to 2800            1.071            11  
-##                          1601 to 3200            1.044            11  
-##                          1801 to 3600            1.027            18  
+##                          1251 to 2500            1.025            16  
+##                          1501 to 3000            1.068            11  
+##                          1751 to 3500            1.043            11  
 ##                          2001 to 4000            1.021             5  
-##                          2201 to 4400            1.017             5  
-##                          2401 to 4800            1.047            11  
-##                          2601 to 5200            1.045            11  
-##                          2801 to 5600            1.026            11  
-##                          3001 to 6000            1.029            11  
-##                          3201 to 6400            1.014            11  
-##                          3401 to 6800            1.008            11  
-##                          3601 to 7200            1.012            11  
-##                          3801 to 7600            1.015            11  
-##                          4001 to 8000            1.013            11  
+##                          2251 to 4500            1.016            11  
+##                          2501 to 5000            1.052            11  
+##                          2751 to 5500            1.017            11  
+##                          3001 to 6000            1.022            11  
+##                          3251 to 6500            1.003            25  
+##                          3501 to 7000            1.011            23  
+##                          3751 to 7500            1.010            23  
+##                          4001 to 8000            1.010            11  
+##                          4251 to 8500            1.028            11  
+##                          4501 to 9000            1.022            11  
+##                          4751 to 9500            1.023            11  
+##                          5001 to 10000           1.011            11  
 ## 
 ## 
 ## METROPOLIS-HASTINGS ACCEPTANCE RATES:</code></pre>
-<pre class="r"><code>blimp_print_focal(fit1)      #  outcome section for focal analysis model only</code></pre>
+<pre class="r"><code>blimp_print_focal(fit1)        #  outcome section for focal analysis model only</code></pre>
 <pre><code>## Outcome Variable:  y          
 ## 
 ## Grand Mean Centered: m
@@ -1703,33 +1705,33 @@ centered between-person moderator <code>m</code>.</p>
 ## Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
 ##                                 ------------------------------------------------------------------------------
 ## Variances:                      
-##   L2 : Var(Intercept)                15.113      2.765     10.784     21.503        ---        ---    763.360 
-##   L2 : Cov(x,Intercept)              -0.437      0.862     -2.113      1.239        ---        ---    152.566 
-##   L2 : Var(x)                         1.005      0.589      0.059      2.300        ---        ---     19.735 
-##   Residual Var.                      10.345      0.948      8.725     12.425        ---        ---     45.193 
+##   L2 : Var(Intercept)                15.124      2.752     10.740     21.549        ---        ---   3208.924 
+##   L2 : Cov(x,Intercept)              -0.552      0.846     -2.249      1.085        ---        ---    953.438 
+##   L2 : Var(x)                         1.000      0.573      0.201      2.431        ---        ---    220.546 
+##   Residual Var.                      10.323      0.935      8.683     12.331        ---        ---   1233.779 
 ## 
 ## Coefficients:                   
-##   Intercept                          25.089      0.416     24.220     25.834   3625.321      0.000    106.246 
-##   x                                   0.114      0.192     -0.274      0.484      0.327      0.567    331.876 
-##   m                                   0.252      0.432     -0.617      1.072      0.336      0.562    104.327 
-##   x*m                                -0.126      0.206     -0.522      0.292      0.334      0.563    361.705 
+##   Intercept                          25.116      0.437     24.252     25.966   3297.552      0.000    405.090 
+##   x                                   0.098      0.202     -0.303      0.489      0.229      0.632   1536.782 
+##   m                                   0.273      0.421     -0.588      1.059      0.373      0.541    549.856 
+##   x*m                                -0.121      0.208     -0.523      0.301      0.322      0.570   1709.798 
 ## 
 ## Standard Deviations:            
-##   L2 : SD(Intercept)                  3.888      0.348      3.284      4.637        ---        ---    746.571 
-##   L2 : Cor(x,Intercept)              -0.117      0.287     -0.902      0.316        ---        ---     16.350 
-##   L2 : SD(x)                          1.003      0.319      0.242      1.516        ---        ---     12.658 
-##   Residual SD                         3.216      0.146      2.954      3.525        ---        ---     46.322 
+##   L2 : SD(Intercept)                  3.889      0.347      3.277      4.642        ---        ---   3153.451 
+##   L2 : Cor(x,Intercept)              -0.147      0.221     -0.590      0.289        ---        ---    573.156 
+##   L2 : SD(x)                          1.000      0.279      0.448      1.559        ---        ---    180.248 
+##   Residual SD                         3.213      0.145      2.947      3.512        ---        ---   1234.501 
 ## 
 ## Standardized Coefficients:      
-##   x                                   0.026      0.043     -0.062      0.107      0.329      0.566    331.959 
-##   m                                   0.049      0.082     -0.114      0.201      0.340      0.560    104.521 
-##   x*m                                -0.027      0.044     -0.112      0.061      0.336      0.562    363.116 
+##   x                                   0.022      0.045     -0.068      0.109      0.230      0.631   1541.312 
+##   m                                   0.052      0.080     -0.112      0.198      0.377      0.539    559.113 
+##   x*m                                -0.026      0.045     -0.111      0.065      0.322      0.570   1695.237 
 ## 
 ## Proportion Variance Explained   
-##   by Coefficients                     0.010      0.012      0.001      0.047        ---        ---    147.372 
-##   by Level-2 Random Intercepts        0.553      0.049      0.459      0.649        ---        ---    532.069 
-##   by Level-2 Random Slopes            0.049      0.030      0.003      0.118        ---        ---     19.858 
-##   by Level-1 Residual Variation       0.378      0.047      0.295      0.479        ---        ---     67.775 
+##   by Coefficients                     0.010      0.012      0.001      0.045        ---        ---    781.676 
+##   by Level-2 Random Intercepts        0.554      0.049      0.457      0.649        ---        ---   2252.013 
+##   by Level-2 Random Slopes            0.050      0.028      0.010      0.117        ---        ---    220.540 
+##   by Level-1 Residual Variation       0.378      0.047      0.289      0.474        ---        ---   1266.837 
 ## 
 ##                                 ------------------------------------------------------------------------------
 ## 
@@ -1739,24 +1741,23 @@ centered between-person moderator <code>m</code>.</p>
 <pre class="r"><code>#rblimp::output(fit1$fit)      # full output</code></pre>
 <hr />
 </div>
-<div id="model-2-contextual-moderation-by-the-latent-mean-of-x" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> 4. Model 2 – Contextual
-moderation by the latent mean of x</h1>
+<div id="example-2-cross-level-interaction-with-latent-mean-centering-no-auxiliaries" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> 4. Example 2 –
+Cross-level interaction with latent mean centering (no auxiliaries)</h1>
 <p><strong>Goal:</strong> Test whether the within-person slope of x
 varies as a function of the person’s latent mean of x.</p>
 <pre class="text"><code>y ~ x * x.mean + (1 + x | id)</code></pre>
-<p><code>x</code> = latent within-person component<br />
-<code>x.mean</code> = latent between-person component (person’s latent
-mean of x)</p>
+<p><code>x</code> = latent within-person component (activated with
+center_group = “x”) <code>x.mean</code> = latent between-person
+component (person’s latent mean of x)</p>
 <pre class="r"><code>fit2 &lt;- EMAuxiliary(
   y ~ x * x.mean + (1 + x | id),
   data = dat, id = &quot;id&quot;, 
-  center_group = &quot;x&quot;,
-  burn = 5000, iter = 2000
+  center_group = &quot;x&quot;
 )</code></pre>
 <pre><code>## Auxiliaries route: no-aux</code></pre>
 <pre><code>## ! Converting data to `data.farme`</code></pre>
-<pre class="r"><code>cat(fit2$blimp_code)         # show generated BLIMP program code</code></pre>
+<pre class="r"><code>cat(fit2$blimp_code)          # show generated BLIMP program code</code></pre>
 <pre><code>## DATA: &lt;in-memory by rblimp&gt;;
 ## VARIABLES: id y x;
 ## CLUSTERID: id;
@@ -1767,8 +1768,8 @@ mean of x)</p>
 ##   y ~ x x.mean x*x.mean | x;
 ## 
 ## SEED: 12345;
-## BURN: 5000;
-## ITER: 2000;
+## BURN: 10000;
+## ITER: 10000;
 ## CHAINS: 2;</code></pre>
 <pre class="r"><code>blimp_print_psr(fit2)         # PSR section only</code></pre>
 <pre><code>## ---- PSR section ----
@@ -1778,30 +1779,30 @@ mean of x)</p>
 ##         iterations to create twice as many chains.
 ## 
 ##   Comparing iterations across 2 chains     Highest PSR   Parameter #  
-##                           126 to 250             1.311            11  
 ##                           251 to 500             1.283            11  
-##                           376 to 750             1.158            11  
 ##                           501 to 1000            1.085            10  
-##                           626 to 1250            1.160            11  
 ##                           751 to 1500            1.094            11  
-##                           876 to 1750            1.230            11  
 ##                          1001 to 2000            1.266            11  
-##                          1126 to 2250            1.267            11  
 ##                          1251 to 2500            1.186            11  
-##                          1376 to 2750            1.136            11  
-##                          1501 to 3000            1.096            11  
-##                          1626 to 3250            1.084            11  
-##                          1751 to 3500            1.049            11  
-##                          1876 to 3750            1.039            11  
-##                          2001 to 4000            1.022             5  
-##                          2126 to 4250            1.027            11  
-##                          2251 to 4500            1.009             7  
-##                          2376 to 4750            1.007            18  
-##                          2501 to 5000            1.024            11  
+##                          1501 to 3000            1.091            11  
+##                          1751 to 3500            1.053            11  
+##                          2001 to 4000            1.021             5  
+##                          2251 to 4500            1.007            14  
+##                          2501 to 5000            1.026            11  
+##                          2751 to 5500            1.017            11  
+##                          3001 to 6000            1.011            11  
+##                          3251 to 6500            1.023            11  
+##                          3501 to 7000            1.014            11  
+##                          3751 to 7500            1.028            11  
+##                          4001 to 8000            1.016            14  
+##                          4251 to 8500            1.007             7  
+##                          4501 to 9000            1.007            10  
+##                          4751 to 9500            1.017            11  
+##                          5001 to 10000           1.033            11  
 ## 
 ## 
 ## METROPOLIS-HASTINGS ACCEPTANCE RATES:</code></pre>
-<pre class="r"><code>blimp_print_focal(fit2)      #  outcome section for focal analysis model only</code></pre>
+<pre class="r"><code>blimp_print_focal(fit2)       #  outcome section for focal analysis model only</code></pre>
 <pre><code>## Outcome Variable:  y          
 ## 
 ## Group Mean Centered: x
@@ -1810,61 +1811,62 @@ mean of x)</p>
 ## Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
 ##                                 ------------------------------------------------------------------------------
 ## Variances:                      
-##   L2 : Var(Intercept)                15.090      2.780     10.568     21.259        ---        ---    964.706 
-##   L2 : Cov(x,Intercept)              -0.770      0.828     -2.407      0.802        ---        ---    146.303 
-##   L2 : Var(x)                         0.532      0.470      0.088      1.813        ---        ---     41.832 
-##   Residual Var.                      10.291      0.908      8.687     12.272        ---        ---    455.118 
+##   L2 : Var(Intercept)                15.037      2.747     10.664     21.360        ---        ---   4132.270 
+##   L2 : Cov(x,Intercept)              -0.711      0.857     -2.423      0.938        ---        ---    656.009 
+##   L2 : Var(x)                         0.689      0.439      0.146      1.822        ---        ---    278.055 
+##   Residual Var.                      10.245      0.904      8.649     12.181        ---        ---   2154.132 
 ## 
 ## Coefficients:                   
-##   Intercept                          25.080      0.438     24.213     25.908   3283.133      0.000    175.502 
-##   x                                   0.082      0.191     -0.290      0.453      0.176      0.675    558.309 
-##   x.mean[id]                         -0.053      0.620     -1.449      1.026      0.021      0.884     67.538 
-##   x*x.mean[id]                       -0.767      0.266     -1.328     -0.275      8.355      0.004    339.709 
+##   Intercept                          25.116      0.436     24.254     25.960   3323.683      0.000    747.775 
+##   x                                   0.091      0.193     -0.287      0.468      0.217      0.641   2314.574 
+##   x.mean[id]                         -0.167      0.633     -1.378      1.122      0.063      0.802    393.579 
+##   x*x.mean[id]                       -0.739      0.269     -1.282     -0.223      7.579      0.006   1268.176 
 ## 
 ## Standard Deviations:            
-##   L2 : SD(Intercept)                  3.885      0.351      3.251      4.611        ---        ---    952.475 
-##   L2 : Cor(x,Intercept)              -0.271      0.290     -0.861      0.254        ---        ---     47.293 
-##   L2 : SD(x)                          0.730      0.276      0.297      1.346        ---        ---     32.501 
-##   Residual SD                         3.208      0.141      2.947      3.503        ---        ---    450.324 
+##   L2 : SD(Intercept)                  3.878      0.347      3.266      4.622        ---        ---   4081.689 
+##   L2 : Cor(x,Intercept)              -0.231      0.275     -0.778      0.308        ---        ---    392.040 
+##   L2 : SD(x)                          0.830      0.250      0.382      1.350        ---        ---    237.520 
+##   Residual SD                         3.201      0.140      2.941      3.490        ---        ---   2123.435 
 ## 
 ## Standardized Coefficients:      
-##   x                                   0.018      0.043     -0.066      0.102      0.175      0.675    561.464 
-##   x.mean[id]                         -0.009      0.098     -0.223      0.163      0.019      0.889     68.783 
-##   x*x.mean[id]                       -0.143      0.047     -0.234     -0.051      9.205      0.002    440.483 
+##   x                                   0.020      0.043     -0.065      0.104      0.218      0.641   2310.978 
+##   x.mean[id]                         -0.027      0.099     -0.213      0.176      0.062      0.803    402.120 
+##   x*x.mean[id]                       -0.139      0.048     -0.229     -0.042      8.278      0.004   1426.644 
 ## 
 ## Proportion Variance Explained   
-##   by Coefficients                     0.031      0.019      0.007      0.077        ---        ---    245.278 
-##   by Level-2 Random Intercepts        0.555      0.050      0.451      0.649        ---        ---    762.423 
-##   by Level-2 Random Slopes            0.027      0.023      0.005      0.090        ---        ---     39.669 
-##   by Level-1 Residual Variation       0.377      0.047      0.293      0.473        ---        ---    468.789 
+##   by Coefficients                     0.030      0.019      0.007      0.078        ---        ---   1279.436 
+##   by Level-2 Random Intercepts        0.553      0.049      0.453      0.646        ---        ---   3481.688 
+##   by Level-2 Random Slopes            0.035      0.022      0.007      0.090        ---        ---    291.266 
+##   by Level-1 Residual Variation       0.375      0.046      0.292      0.469        ---        ---   1807.747 
 ## 
 ##                                 ------------------------------------------------------------------------------
 ## 
 ## 
 ## 
 ## </code></pre>
-<pre class="r"><code>#rblimp::output(fit2$fit)      # full output</code></pre>
+<pre class="r"><code>#rblimp::output(fit2$fit)     # full output</code></pre>
 <hr />
 </div>
-<div id="model-3-adding-auxiliary-variables" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> 5. Model 3 – Adding
-auxiliary variables</h1>
-<p><strong>Goal:</strong> Re-estimate Model 2 including auxiliary
+<div id="example-3.-cross-level-interaction-with-latent-mean-centering-and-continuous-auxiliaries" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> 5. Example 3.
+Cross-level interaction with latent mean centering and continuous
+auxiliaries</h1>
+<p><strong>Goal:</strong> Estimate a model with continous auxiliary
 variables to improve missing-data handling.<br />
 Auxiliary variables can have within-, between-, or mixed variance;
 <code>EMAuxiliary()</code> detects this automatically.</p>
 <pre class="text"><code>y ~ x * x.mean + (1 + x | id)
-aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;)</code></pre>
+aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;)
+center_group = &quot;x&quot;</code></pre>
 <pre class="r"><code>fit3 &lt;- EMAuxiliary(
   y ~ x * x.mean + (1 + x | id),
   data = dat, id = &quot;id&quot;, center_group = &quot;x&quot;,
-  aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;),
-  burn = 8000, iter = 2000
+  aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;)
 )</code></pre>
 <pre><code>## [EMAuxilary] Standardized continuous auxiliaries: aux_cont1, aux_cont2</code></pre>
 <pre><code>## Auxiliaries route: inlined-into-model</code></pre>
 <pre><code>## ! Converting data to `data.farme`</code></pre>
-<pre class="r"><code>cat(fit3$blimp_code)         # show generated BLIMP program code</code></pre>
+<pre class="r"><code>cat(fit3$blimp_code)           # show generated BLIMP program code</code></pre>
 <pre><code>## DATA: &lt;in-memory by rblimp&gt;;
 ## VARIABLES: id y x aux_cont1 aux_cont2;
 ## CLUSTERID: id;
@@ -1877,10 +1879,10 @@ aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;)</code></pre>
 ##   aux_cont1 ~ y y.mean x x.mean x*x.mean;
 ##   aux_cont2 ~ y y.mean x x.mean x*x.mean;
 ## SEED: 12345;
-## BURN: 8000;
-## ITER: 2000;
+## BURN: 10000;
+## ITER: 10000;
 ## CHAINS: 2;</code></pre>
-<pre class="r"><code>blimp_print_psr(fit3)         # PSR section only</code></pre>
+<pre class="r"><code>blimp_print_psr(fit3)          # PSR section only</code></pre>
 <pre><code>## ---- PSR section ----
 ## BURN-IN POTENTIAL SCALE REDUCTION (PSR) OUTPUT:
 ## 
@@ -1888,30 +1890,30 @@ aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;)</code></pre>
 ##         iterations to create twice as many chains.
 ## 
 ##   Comparing iterations across 2 chains     Highest PSR   Parameter #  
-##                           201 to 400             1.314             3  
-##                           401 to 800             1.321             7  
-##                           601 to 1200            1.082            10  
-##                           801 to 1600            1.041            18  
+##                           251 to 500             1.148            11  
+##                           501 to 1000            1.065            58  
+##                           751 to 1500            1.194            18  
 ##                          1001 to 2000            1.114            11  
-##                          1201 to 2400            1.037            10  
-##                          1401 to 2800            1.037            11  
-##                          1601 to 3200            1.186            10  
-##                          1801 to 3600            1.242            11  
+##                          1251 to 2500            1.039            10  
+##                          1501 to 3000            1.096            11  
+##                          1751 to 3500            1.222            11  
 ##                          2001 to 4000            1.107            11  
-##                          2201 to 4400            1.144            10  
-##                          2401 to 4800            1.145            11  
-##                          2601 to 5200            1.126            11  
-##                          2801 to 5600            1.086            11  
-##                          3001 to 6000            1.096            11  
-##                          3201 to 6400            1.077            11  
-##                          3401 to 6800            1.069            11  
-##                          3601 to 7200            1.040            11  
-##                          3801 to 7600            1.030            11  
-##                          4001 to 8000            1.034            11  
+##                          2251 to 4500            1.158            10  
+##                          2501 to 5000            1.148            11  
+##                          2751 to 5500            1.093            11  
+##                          3001 to 6000            1.094            11  
+##                          3251 to 6500            1.072            11  
+##                          3501 to 7000            1.058            10  
+##                          3751 to 7500            1.021            11  
+##                          4001 to 8000            1.028            11  
+##                          4251 to 8500            1.024            11  
+##                          4501 to 9000            1.016            11  
+##                          4751 to 9500            1.020            11  
+##                          5001 to 10000           1.022            14  
 ## 
 ## 
 ## METROPOLIS-HASTINGS ACCEPTANCE RATES:</code></pre>
-<pre class="r"><code>blimp_print_focal(fit3)      #  outcome section for focal analysis model only</code></pre>
+<pre class="r"><code>blimp_print_focal(fit3)        #  outcome section for focal analysis model only</code></pre>
 <pre><code>## Outcome Variable:  y          
 ## 
 ## Group Mean Centered: x
@@ -1920,33 +1922,33 @@ aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;)</code></pre>
 ## Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
 ##                                 ------------------------------------------------------------------------------
 ## Variances:                      
-##   L2 : Var(Intercept)                14.909      2.659     10.608     21.121        ---        ---    719.243 
-##   L2 : Cov(x,Intercept)              -0.528      0.878     -2.499      0.893        ---        ---     84.966 
-##   L2 : Var(x)                         0.662      0.461      0.009      1.707        ---        ---     14.565 
-##   Residual Var.                      10.444      0.936      8.700     12.443        ---        ---     72.178 
+##   L2 : Var(Intercept)                14.923      2.700     10.636     21.114        ---        ---   3301.848 
+##   L2 : Cov(x,Intercept)              -0.659      0.834     -2.370      0.925        ---        ---    318.627 
+##   L2 : Var(x)                         0.590      0.440      0.046      1.706        ---        ---    103.528 
+##   Residual Var.                      10.298      0.926      8.675     12.333        ---        ---    983.148 
 ## 
 ## Coefficients:                   
-##   Intercept                          25.061      0.418     24.172     25.819   3591.460      0.000    108.385 
-##   x                                   0.106      0.190     -0.272      0.479      0.291      0.589    380.804 
-##   x.mean[id]                         -0.307      0.601     -1.346      0.973      0.179      0.672     65.267 
-##   x*x.mean[id]                       -0.749      0.271     -1.314     -0.255      7.891      0.005    210.412 
+##   Intercept                          25.026      0.442     24.191     25.921   3210.649      0.000    533.762 
+##   x                                   0.091      0.191     -0.291      0.456      0.213      0.644   1651.113 
+##   x.mean[id]                         -0.080      0.683     -1.443      1.257      0.014      0.906    233.627 
+##   x*x.mean[id]                       -0.783      0.280     -1.356     -0.248      7.901      0.005    761.457 
 ## 
 ## Standard Deviations:            
-##   L2 : SD(Intercept)                  3.861      0.338      3.257      4.596        ---        ---    714.569 
-##   L2 : Cor(x,Intercept)              -0.192      0.286     -0.772      0.351        ---        ---     67.329 
-##   L2 : SD(x)                          0.813      0.311      0.096      1.306        ---        ---      9.861 
-##   Residual SD                         3.232      0.144      2.950      3.527        ---        ---     74.385 
+##   L2 : SD(Intercept)                  3.863      0.343      3.261      4.595        ---        ---   3273.326 
+##   L2 : Cor(x,Intercept)              -0.246      0.301     -0.838      0.323        ---        ---    164.554 
+##   L2 : SD(x)                          0.768      0.275      0.215      1.306        ---        ---     82.846 
+##   Residual SD                         3.209      0.143      2.945      3.512        ---        ---    983.626 
 ## 
 ## Standardized Coefficients:      
-##   x                                   0.024      0.043     -0.063      0.108      0.294      0.588    379.568 
-##   x.mean[id]                         -0.047      0.092     -0.203      0.145      0.194      0.660     64.804 
-##   x*x.mean[id]                       -0.136      0.047     -0.232     -0.046      8.615      0.003    241.523 
+##   x                                   0.020      0.043     -0.066      0.104      0.213      0.645   1614.241 
+##   x.mean[id]                         -0.013      0.103     -0.214      0.186      0.015      0.902    230.751 
+##   x*x.mean[id]                       -0.145      0.050     -0.239     -0.045      8.489      0.004    899.045 
 ## 
 ## Proportion Variance Explained   
-##   by Coefficients                     0.030      0.017      0.007      0.073        ---        ---    245.938 
-##   by Level-2 Random Intercepts        0.548      0.048      0.453      0.640        ---        ---    418.322 
-##   by Level-2 Random Slopes            0.034      0.023      0.000      0.084        ---        ---     14.388 
-##   by Level-1 Residual Variation       0.383      0.046      0.300      0.475        ---        ---    119.423 
+##   by Coefficients                     0.032      0.021      0.007      0.086        ---        ---    665.725 
+##   by Level-2 Random Intercepts        0.550      0.049      0.451      0.643        ---        ---   2468.233 
+##   by Level-2 Random Slopes            0.030      0.022      0.002      0.087        ---        ---     92.695 
+##   by Level-1 Residual Variation       0.379      0.046      0.292      0.477        ---        ---   1046.778 
 ## 
 ##                                 ------------------------------------------------------------------------------
 ## 
@@ -1958,13 +1960,25 @@ aux = c(&quot;aux_cont1&quot;, &quot;aux_cont2&quot;)</code></pre>
 <h1><span class="header-section-number">7</span> 6. Model 4 – Binary,
 ordinal, and nominal variables</h1>
 <p><strong>Goal:</strong> Demonstrate handling of a <strong>binary
-outcome</strong>, <strong>binary predictor (with latent mean
-centering)</strong>, and both <strong>ordinal</strong> and
+outcome</strong> and both <strong>ordinal</strong> and
 <strong>nominal</strong> auxiliary variables.</p>
+<p>Do I <strong>need</strong> to declare ordinal/nominal? - Yes when a
+variable is binary/ordinal/nominal and is included as an outcome in the
+Blimp model—either the focal outcome or as an auxiliary being jointly
+modeled for missing-data handling. - Often <strong>not
+necessary</strong> when the same variable is used only as a predictor
+(e.g., Likert 1–5 used as a covariate). In that case, treating it as
+continuous is typically acceptable and mirrors common practice in
+multilevel models. - <strong>When in doubt</strong>: prioritize correct
+specification for outcomes and auxiliaries, and keep predictors simple
+unless you have a reason not to. - Declaring types is about how Blimp
+models the variable’s distribution in the joint model—not about policing
+measurement theory.</p>
 <p><strong>Model specification</strong></p>
-<pre class="text"><code>y_bin ~ x_bin + x_bin.mean + (1 + x | id)
+<pre class="text"><code>y_bin ~ x + x.mean + (1 + x | id)
 aux = c(&quot;aux_ord&quot;, &quot;aux_nom&quot;)
-ordinal = c(&quot;y_bin&quot;, &quot;x_bin &quot;aux_ord&quot;)
+center_group = &quot;x&quot;
+ordinal = c(&quot;y_bin&quot;, &quot;aux_ord&quot;)
 nominal = &quot;aux_nom&quot;</code></pre>
 <pre class="r"><code>fit4 &lt;- EMAuxiliary(
   y_bin ~ x + x.mean + (1 + x | id),
@@ -1973,11 +1987,11 @@ nominal = &quot;aux_nom&quot;</code></pre>
   ordinal = c(&quot;y_bin&quot;, &quot;aux_ord&quot;),
   nominal = &quot;aux_nom&quot;,
   center_group = &quot;x&quot;,
-  burn = 15000, iter = 5000
+  burn = 20000
 )</code></pre>
 <pre><code>## Auxiliaries route: inlined-into-model</code></pre>
 <pre><code>## ! Converting data to `data.farme`</code></pre>
-<pre class="r"><code>cat(fit4$blimp_code)         # show generated BLIMP program code</code></pre>
+<pre class="r"><code>cat(fit4$blimp_code)          # show generated BLIMP program code</code></pre>
 <pre><code>## DATA: &lt;in-memory by rblimp&gt;;
 ## VARIABLES: id y_bin x aux_ord aux_nom;
 ## CLUSTERID: id;
@@ -1990,8 +2004,8 @@ nominal = &quot;aux_nom&quot;</code></pre>
 ##   aux_ord ~ y_bin y_bin.mean x x.mean;
 ##   aux_nom ~ y_bin y_bin.mean x x.mean;
 ## SEED: 12345;
-## BURN: 15000;
-## ITER: 5000;
+## BURN: 20000;
+## ITER: 10000;
 ## CHAINS: 2;</code></pre>
 <pre class="r"><code>blimp_print_psr(fit4)         # PSR section only</code></pre>
 <pre><code>## ---- PSR section ----
@@ -2001,30 +2015,30 @@ nominal = &quot;aux_nom&quot;</code></pre>
 ##         iterations to create twice as many chains.
 ## 
 ##   Comparing iterations across 2 chains     Highest PSR   Parameter #  
-##                           376 to 750             1.938            25  
-##                           751 to 1500            1.372            25  
-##                          1126 to 2250            1.109            11  
+##                           501 to 1000            1.355            57  
+##                          1001 to 2000            1.153            57  
 ##                          1501 to 3000            1.121            57  
-##                          1876 to 3750            1.118            10  
-##                          2251 to 4500            1.154            10  
-##                          2626 to 5250            1.126             2  
+##                          2001 to 4000            1.143            10  
+##                          2501 to 5000            1.104            10  
 ##                          3001 to 6000            1.084            18  
-##                          3376 to 6750            1.086            57  
-##                          3751 to 7500            1.063            57  
-##                          4126 to 8250            1.077            25  
-##                          4501 to 9000            1.044            57  
-##                          4876 to 9750            1.076            57  
-##                          5251 to 10500           1.062            11  
-##                          5626 to 11250           1.049            11  
-##                          6001 to 12000           1.036            25  
-##                          6376 to 12750           1.058            25  
-##                          6751 to 13500           1.031            40  
-##                          7126 to 14250           1.039            40  
-##                          7501 to 15000           1.034            18  
+##                          3501 to 7000            1.062             2  
+##                          4001 to 8000            1.061            57  
+##                          4501 to 9000            1.045            40  
+##                          5001 to 10000           1.069            57  
+##                          5501 to 11000           1.073            25  
+##                          6001 to 12000           1.025            10  
+##                          6501 to 13000           1.052            10  
+##                          7001 to 14000           1.067            71  
+##                          7501 to 15000           1.051            25  
+##                          8001 to 16000           1.036            18  
+##                          8501 to 17000           1.032            40  
+##                          9001 to 18000           1.042             7  
+##                          9501 to 19000           1.057             7  
+##                         10001 to 20000           1.036            10  
 ## 
 ## 
 ## METROPOLIS-HASTINGS ACCEPTANCE RATES:</code></pre>
-<pre class="r"><code>blimp_print_focal(fit4)      #  outcome section for focal analysis model only</code></pre>
+<pre class="r"><code>blimp_print_focal(fit4)       #  outcome section for focal analysis model only</code></pre>
 <pre><code>## Outcome Variable:  y_bin      
 ## 
 ## Group Mean Centered: x
@@ -2033,39 +2047,39 @@ nominal = &quot;aux_nom&quot;</code></pre>
 ## Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
 ##                                 ------------------------------------------------------------------------------
 ## Variances:                      
-##   L2 : Var(Intercept)                 2.485      0.891      1.272      4.659        ---        ---     30.193 
-##   L2 : Cov(x,Intercept)               0.181      0.377     -0.479      0.975        ---        ---     55.951 
-##   L2 : Var(x)                         0.403      0.232      0.102      0.998        ---        ---     73.273 
+##   L2 : Var(Intercept)                 2.670      1.005      1.413      5.312        ---        ---     82.860 
+##   L2 : Cov(x,Intercept)               0.219      0.493     -0.610      1.381        ---        ---     62.403 
+##   L2 : Var(x)                         0.459      0.301      0.126      1.281        ---        ---    107.478 
 ##   Residual Var.                       1.000      0.000      1.000      1.000        ---        ---        nan 
 ## 
 ## Coefficients:                   
-##   Intercept                           0.059      0.188     -0.306      0.439      0.113      0.737    136.995 
-##   x                                   0.155      0.117     -0.071      0.385      1.712      0.191    174.261 
-##   x.mean[id]                         -0.008      0.293     -0.625      0.519      0.001      0.975     79.156 
+##   Intercept                           0.063      0.214     -0.347      0.483      0.105      0.746    183.408 
+##   x                                   0.169      0.126     -0.068      0.424      1.849      0.174    277.370 
+##   x.mean[id]                          0.033      0.276     -0.482      0.620      0.029      0.866    100.323 
 ## 
 ## Thresholds:                     
 ##   Tau 1                               0.000      0.000      0.000      0.000        ---        ---        nan 
 ## 
 ## Standard Deviations:            
-##   L2 : SD(Intercept)                  1.577      0.268      1.128      2.159        ---        ---     30.084 
-##   L2 : Cor(x,Intercept)               0.201      0.339     -0.491      0.752        ---        ---     68.129 
-##   L2 : SD(x)                          0.635      0.175      0.319      0.999        ---        ---     66.963 
+##   L2 : SD(Intercept)                  1.634      0.286      1.189      2.305        ---        ---     71.559 
+##   L2 : Cor(x,Intercept)               0.218      0.348     -0.528      0.779        ---        ---     48.153 
+##   L2 : SD(x)                          0.678      0.198      0.356      1.132        ---        ---     99.458 
 ##   Residual SD                         1.000      0.000      1.000      1.000        ---        ---        nan 
 ## 
 ## Standardized Coefficients:      
-##   x                                   0.090      0.065     -0.041      0.216      1.778      0.182    198.080 
-##   x.mean[id]                         -0.003      0.113     -0.242      0.204      0.001      0.974     80.652 
+##   x                                   0.094      0.068     -0.037      0.228      1.915      0.166    278.234 
+##   x.mean[id]                          0.013      0.102     -0.175      0.218      0.027      0.871    101.909 
 ## 
 ## Proportion Variance Explained   
-##   by Coefficients                     0.019      0.022      0.001      0.088        ---        ---    124.293 
-##   by Level-2 Random Intercepts        0.597      0.071      0.451      0.723        ---        ---     71.866 
-##   by Level-2 Random Slopes            0.130      0.056      0.043      0.259        ---        ---    119.674 
-##   by Level-1 Residual Variation       0.240      0.061      0.147      0.382        ---        ---     33.019 
+##   by Coefficients                     0.020      0.019      0.001      0.072        ---        ---    288.932 
+##   by Level-2 Random Intercepts        0.601      0.077      0.435      0.737        ---        ---    134.439 
+##   by Level-2 Random Slopes            0.143      0.067      0.048      0.309        ---        ---    135.527 
+##   by Level-1 Residual Variation       0.224      0.055      0.130      0.340        ---        ---     61.688 
 ## 
 ##                                 ------------------------------------------------------------------------------
 ## 
 ## </code></pre>
-<pre class="r"><code>#rblimp::output(fit4$fit)      # full output</code></pre>
+<pre class="r"><code>#rblimp::output(fit4$fit)     # full output</code></pre>
 <hr />
 </div>
 <div id="model-5---convergence" class="section level1" number="8">
@@ -2089,12 +2103,12 @@ predictors BEFORE calling EMAuxilary().</li>
   y ~ x + m + x:m + (1 + x | id),
   data = dat, id = &quot;id&quot;, 
   aux = c(&quot;aux_cont1&quot;),
-  burn = 1000, iter = 2000
+  burn = 800, iter = 2000
 )</code></pre>
 <pre><code>## [EMAuxilary] Standardized continuous auxiliaries: aux_cont1</code></pre>
 <pre><code>## Auxiliaries route: inlined-into-model</code></pre>
 <pre><code>## ! Converting data to `data.farme`</code></pre>
-<pre><code>## Warning: Final PSR is 1.060. The final PSR should be &lt; 1.05.
+<pre><code>## Warning: Final PSR is 1.108. The final PSR should be &lt; 1.05.
 ## The results are NOT TRUSTWORTHY!
 ## Consider increasing burn/iter, more chains, simplifying the model, or reducing auxiliaries.
 ## Potential cause for poor PSR: large scale differences among focal variables.
@@ -2106,9 +2120,9 @@ predictors BEFORE calling EMAuxilary().</li>
 ## 
 ## Tip: Consider z-scaling y and the largest-SD predictors BEFORE calling EMAuxilary().</code></pre>
 <pre class="r"><code>#cat(fit5$blimp_code)         # show generated BLIMP program code
-#blimp_print_psr(fit5)         # PSR section only
+#blimp_print_psr(fit5)        # PSR section only
 #blimp_print_focal(fit5)      #  outcome section for focal analysis model only
-#rblimp::output(fit5$fit)      # full output</code></pre>
+#rblimp::output(fit5$fit)     # full output</code></pre>
 <hr />
 </div>
 <div id="session-info" class="section level1" number="9">
@@ -2116,7 +2130,7 @@ predictors BEFORE calling EMAuxilary().</li>
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>## R version 4.5.1 (2025-06-13 ucrt)
 ## Platform: x86_64-w64-mingw32/x64
-## Running under: Windows 11 x64 (build 26100)
+## Running under: Windows 11 x64 (build 26200)
 ## 
 ## Matrix products: default
 ##   LAPACK version 3.12.1

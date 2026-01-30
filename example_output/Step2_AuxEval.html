@@ -2905,16 +2905,14 @@ mixed-level variables (based on ICC). Decompose and standardize
 variables into within- and between-person parts.<br />
 3. Estimate multilevel logistic models predicting missingness 4. Compute
 within- and between-level correlations between auxiliary variables and
-focal variables. 4. Generate a detailed summary table to evaluate
-auxiliaries. 4. Rank auxiliaries.</p>
+focal variables. 5. Generate a detailed summary table to evaluate
+auxiliaries. 6. Create a heatmap to visually summarize auxiliary
+variable strength.</p>
 <p><strong>Output</strong><br />
 Produces interactive and static tables summarizing each auxiliary’s
 predictive utility and conceptual relevance.<br />
 These results guide the selection of auxiliaries to include in Step 3
 (<em>Modeling with EMAuxiliary</em>).</p>
-<p><strong>Dependencies</strong><br />
-R (≥ 4.2), <code>dplyr</code>, <code>tidyr</code>, <code>lme4</code>,
-<code>broom.mixed</code>, <code>gt</code>, <code>DT</code>.</p>
 <p>For background and installation instructions, see the <a href="https://github.com/schneids111/EMAuxiliary-Workflow">README</a>.</p>
 </div>
 <div id="introduction" class="section level1" number="2">
@@ -2929,7 +2927,7 @@ matters</strong>, and <strong>how to interpret the results</strong>.</p>
 <blockquote>
 <p><strong>Packages required:</strong><br />
 Install these before running:<br />
-<code>install.packages(c(&quot;lme4&quot;, &quot;broom.mixed&quot;, &quot;dplyr&quot;, &quot;tidyr&quot;, &quot;gt&quot;, &quot;DT&quot;))</code></p>
+<code>install.packages(c(&quot;lme4&quot;, &quot;broom.mixed&quot;, &quot;dplyr&quot;, &quot;tidyr&quot;, &quot;gt&quot;, &quot;DT&quot;, &quot;patchwork&quot;))</code></p>
 </blockquote>
 <hr />
 <div id="step-1-load-your-ema-dataset" class="section level2" number="2.1">
@@ -2946,7 +2944,7 @@ completed prompt)<br />
 interest</p>
 <pre class="r"><code># 🔄 EDIT THIS LINE: Replace with your real dataset path
 # Example:
-# ema_df &lt;- read.csv(&quot;your_data.csv&quot;)</code></pre>
+# load (&quot;ema_prepared.rda&quot;)</code></pre>
 <hr />
 <div id="optional-try-the-example-dataset-for-testing-only" class="section level3" number="2.1.1">
 <h3><span class="header-section-number">2.1.1</span> Optional: Try the
@@ -3083,7 +3081,10 @@ for Each Auxiliary</h2>
 between-person proportion of variance.<br />
 <strong>Why it matters:</strong> We classify auxiliaries as
 <code>pure_within</code> (ICC &lt; .05), <code>pure_between</code> (ICC
-&gt; .95), or <code>mixed</code>.</p>
+&gt; .95), or <code>mixed</code>. <strong>Note:</strong> Ordered factors
+(ordered categorical variables) should be recoded as numeric. Nominal
+(unordered categorical variables) should be recoded as into a series of
+binary numeric variables.</p>
 <pre class="r"><code>icc_df &lt;- data.frame()
 
 for (var in aux_vars) {
@@ -3161,45 +3162,8 @@ for (var in aux_vars) {
 Missingness (Multilevel Logistic Models)</h2>
 <p><strong>What this does:</strong> For each auxiliary, estimates how
 strongly it predicts missingness at WP and/or PM level.<br />
-<strong>Output:</strong> Odds ratios (OR) by level.</p>
-<pre class="r"><code>logit_results &lt;- data.frame()
-
-for (var in aux_vars) {
-  wp_col &lt;- paste0(var, &quot;_WP_z&quot;)
-  pm_col &lt;- paste0(var, &quot;_PM_z&quot;)
-
-  df_sub &lt;- ema_df %&gt;%
-    dplyr::filter(!is.na(.data[[missing_var]]) &amp; (!is.na(.data[[wp_col]]) | !is.na(.data[[pm_col]])))
-
-  if (nrow(df_sub) &lt; 20) {
-    warning(paste(&quot;Skipping&quot;, var, &quot;- fewer than 20 usable rows.&quot;))
-    next
-  }
-
-  rhs &lt;- c()
-  if (any(!is.na(df_sub[[wp_col]]))) rhs &lt;- c(rhs, wp_col)
-  if (any(!is.na(df_sub[[pm_col]]))) rhs &lt;- c(rhs, pm_col)
-
-  # Random intercept by person
-  fml &lt;- reformulate(termlabels = c(rhs, paste0(&quot;(1|&quot;, &quot;`&quot;, id_var, &quot;`&quot;, &quot;)&quot;)), response = missing_var)
-
-  model &lt;- tryCatch(lme4::glmer(fml, data = df_sub, family = binomial, nAGQ = 0),
-                    error = function(e) NULL)
-
-  if (!is.null(model)) {
-    ests &lt;- broom.mixed::tidy(model, effects = &quot;fixed&quot;)
-    ests &lt;- ests[ests$term != &quot;(Intercept)&quot;, ]
-    ests$level &lt;- ifelse(grepl(&quot;_WP_z$&quot;, ests$term), &quot;within&quot;, &quot;between&quot;)
-    ests$variable &lt;- var
-    ests$OR &lt;- exp(ests$estimate)
-    logit_results &lt;- rbind(logit_results, ests[, c(&quot;variable&quot;,&quot;level&quot;,&quot;OR&quot;)])
-  }
-}</code></pre>
-<pre><code>## boundary (singular) fit: see help(&#39;isSingular&#39;)
-## boundary (singular) fit: see help(&#39;isSingular&#39;)
-## boundary (singular) fit: see help(&#39;isSingular&#39;)
-## boundary (singular) fit: see help(&#39;isSingular&#39;)
-## boundary (singular) fit: see help(&#39;isSingular&#39;)</code></pre>
+<strong>This is only for internal estimation only.</strong>
+<strong>Results are shown in Step 7.</strong></p>
 <hr />
 </div>
 <div id="step-6-correlate-auxiliaries-with-focal-variables" class="section level2" number="2.7">
@@ -3208,50 +3172,8 @@ Auxiliaries with Focal Variables</h2>
 <p><strong>What this does:</strong> Computes signed
 <strong>within-</strong> and <strong>between-person</strong>
 correlations of each auxiliary with each focal variable.<br />
-<strong>Why it matters:</strong> Auxiliaries useful for imputation
-should relate meaningfully to model variables.</p>
-<pre class="r"><code>cor_results &lt;- data.frame()
-
-for (aux in aux_vars) {
-  if (!aux %in% names(ema_df)) {
-    warning(paste(&quot;Variable&quot;, aux, &quot;not found; skipping.&quot;))
-    next
-  }
-
-  for (foc in focal_vars) {
-    if (!foc %in% names(ema_df)) {
-      warning(paste(&quot;Variable&quot;, foc, &quot;not found; skipping.&quot;))
-      next
-    }
-
-    x_aux &lt;- suppressWarnings(as.numeric(ema_df[[aux]]))
-    x_foc &lt;- suppressWarnings(as.numeric(ema_df[[foc]]))
-    g     &lt;- as.vector(ema_df[[id_var]])
-
-    df_sub &lt;- data.frame(aux = x_aux, foc = x_foc, g = g)
-    df_sub &lt;- df_sub[!is.na(df_sub$aux) &amp; !is.na(df_sub$foc), ]
-
-    if (nrow(df_sub) == 0) {
-      warning(paste(&quot;No valid data for pair&quot;, aux, &quot;and&quot;, foc, &quot;; skipping.&quot;))
-      next
-    }
-
-    # Within-person correlation (de-mean by person)
-    aux_WP &lt;- df_sub$aux - ave(df_sub$aux, df_sub$g, FUN = mean, na.rm = TRUE)
-    foc_WP &lt;- df_sub$foc - ave(df_sub$foc, df_sub$g, FUN = mean, na.rm = TRUE)
-    cor_w  &lt;- suppressWarnings(cor(aux_WP, foc_WP, use = &quot;pairwise&quot;))
-
-    # Between-person correlation (person means)
-    df_bp &lt;- aggregate(cbind(aux = df_sub$aux, foc = df_sub$foc), by = list(df_sub$g), FUN = mean, na.rm = TRUE)
-    cor_b &lt;- suppressWarnings(cor(df_bp$aux, df_bp$foc, use = &quot;pairwise&quot;))
-
-    cor_results &lt;- rbind(
-      cor_results,
-      data.frame(variable = aux, level = &quot;within&quot;,  focal_var = foc, correlation = cor_w),
-      data.frame(variable = aux, level = &quot;between&quot;, focal_var = foc, correlation = cor_b)
-    )
-  }
-}</code></pre>
+<strong>This is only for internal estimation only.</strong>
+<strong>Results are shown in Step 7.</strong></p>
 <hr />
 </div>
 <div id="step-7-interactive-detailed-table" class="section level2" number="2.8">
@@ -3365,11 +3287,6 @@ show meaningfully sized relationships—<em>and at which levels</em>. It
 supports empirically grounded decisions about which auxiliary variables
 to include in your model.</p>
 <pre class="r"><code>## Step 8: Split-Panel Dual Heatmap (Missingness vs. Focal Variables)
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(patchwork)
 
 # -------------------------------
 # Helper: mask by classification
