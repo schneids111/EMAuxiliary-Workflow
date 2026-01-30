@@ -12,16 +12,17 @@ output:
 
 This notebook illustrates **Step 3** of the *EMAuxiliary Workflow*: fitting multilevel models in **Blimp** using the `EMAuxiliary()` R function.  
 The examples below show how to estimate cross-level interactions, contextual moderation, and models that include auxiliary and categorical variables.
+Each example is a stand-alone demonstration of common modeling issues. They are not presented to be run in sequence. 
 
-**Models demonstrated**
+**Examples demonstrated**
 
-| Model | Description |
-|:------|:-------------|
-| **1** | Cross-level interaction (no auxiliaries) |
-| **2** | Cross-level interaction with latent mean centering |
-| **3** | Model 2 + auxiliary variables |
-| **4** | Model 3 + binary outcome, binary predictor, ordinal and nominal auxiliary|
-| **5** | Checking model convergence|
+| Example | Description |
+|:--------|:-------------|
+| **1**   | Cross-level interaction (no auxiliaries) |
+| **2**   | Cross-level interaction with latent mean centering (no auxiliaries)|
+| **3**   | Same cross-level interaction, with auxiliary variables added |
+| **4**   | Specification of a binary outcome and ordinal and nominal auxiliary variables|
+| **5**   | Poor model convergence|
 
 Each section includes a brief explanation and reproducible code.
 
@@ -110,9 +111,11 @@ dat$y_bin[miss_idx] <- NA
 head(dat)
 ```
 
+
+
 ---
 
-# 3. Model 1 – Cross-level interaction (no auxiliaries)
+# 3. Example 1 – Cross-level interaction (no auxiliaries)
 
 **Goal:** Estimate a random-slope model testing whether the within-person effect of `x` depends on a grand-mean centered between-person moderator `m`.
 
@@ -126,19 +129,18 @@ fit1 <- EMAuxiliary(
   y ~ x + m + x:m + (1 + x | id),
   data = dat, id = "id", 
   center_group = "x",
-  center_grand = "m",
-  burn = 8000, iter = 2000
+  center_grand = "m"
 )
 
-cat(fit1$blimp_code)         # show generated BLIMP program code
-blimp_print_psr(fit1)         # PSR section only
-blimp_print_focal(fit1)      #  outcome section for focal analysis model only
+cat(fit1$blimp_code)           # show generated BLIMP program code
+blimp_print_psr(fit1)          # PSR section only
+blimp_print_focal(fit1)        #  outcome section for focal analysis model only
 #rblimp::output(fit1$fit)      # full output
 ```
 
 ---
 
-# 4. Model 2 – Contextual moderation by the latent mean of x
+# 4. Example 2 – Cross-level interaction with latent mean centering (no auxiliaries)
 
 **Goal:** Test whether the within-person slope of x varies as a function of the person’s latent mean of x.  
 
@@ -153,21 +155,20 @@ y ~ x * x.mean + (1 + x | id)
 fit2 <- EMAuxiliary(
   y ~ x * x.mean + (1 + x | id),
   data = dat, id = "id", 
-  center_group = "x",
-  burn = 5000, iter = 2000
+  center_group = "x"
 )
 
-cat(fit2$blimp_code)         # show generated BLIMP program code
+cat(fit2$blimp_code)          # show generated BLIMP program code
 blimp_print_psr(fit2)         # PSR section only
-blimp_print_focal(fit2)      #  outcome section for focal analysis model only
-#rblimp::output(fit2$fit)      # full output
+blimp_print_focal(fit2)       #  outcome section for focal analysis model only
+#rblimp::output(fit2$fit)     # full output
 ```
 
 ---
 
-# 5. Model 3 – Adding auxiliary variables
+# 5. Example 3. Cross-level interaction with latent mean centering  and continuous auxiliaries
 
-**Goal:** Re-estimate Model 2 including auxiliary variables to improve missing-data handling.  
+**Goal:** Estimate a model with continous auxiliary variables to improve missing-data handling.  
 Auxiliary variables can have within-, between-, or mixed variance; `EMAuxiliary()` detects this automatically.
 
 ```text
@@ -180,12 +181,11 @@ center_group = "x"
 fit3 <- EMAuxiliary(
   y ~ x * x.mean + (1 + x | id),
   data = dat, id = "id", center_group = "x",
-  aux = c("aux_cont1", "aux_cont2"),
-  burn = 8000, iter = 2000
+  aux = c("aux_cont1", "aux_cont2")
 )
-cat(fit3$blimp_code)         # show generated BLIMP program code
-blimp_print_psr(fit3)         # PSR section only
-blimp_print_focal(fit3)      #  outcome section for focal analysis model only
+cat(fit3$blimp_code)           # show generated BLIMP program code
+blimp_print_psr(fit3)          # PSR section only
+blimp_print_focal(fit3)        #  outcome section for focal analysis model only
 #rblimp::output(fit3$fit)      # full output
 ```
 
@@ -193,7 +193,13 @@ blimp_print_focal(fit3)      #  outcome section for focal analysis model only
 
 # 6. Model 4 – Binary, ordinal, and nominal variables
 
-**Goal:** Demonstrate handling of a **binary outcome**, **binary predictor (with latent mean centering)**, and both **ordinal** and **nominal** auxiliary variables.
+**Goal:** Demonstrate handling of a **binary outcome** and both **ordinal** and **nominal** auxiliary variables.
+
+Do I **need** to declare ordinal/nominal?
+- Yes when a variable is binary/ordinal/nominal and is included as an outcome in the Blimp model—either the focal outcome or as an auxiliary being jointly modeled for missing-data handling.
+- Often **not necessary** when the same variable is used only as a predictor (e.g., Likert 1–5 used as a covariate). In that case, treating it as continuous is typically acceptable and mirrors common practice in multilevel models.
+- **When in doubt**: prioritize correct specification for outcomes and auxiliaries, and keep predictors simple unless you have a reason not to.
+- Declaring types is about how Blimp models the variable’s distribution in the joint model—not about policing measurement theory.
 
 **Model specification**
 
@@ -213,13 +219,13 @@ fit4 <- EMAuxiliary(
   ordinal = c("y_bin", "aux_ord"),
   nominal = "aux_nom",
   center_group = "x",
-  burn = 20000, iter = 5000
+  burn = 20000
 )
 
-cat(fit4$blimp_code)         # show generated BLIMP program code
+cat(fit4$blimp_code)          # show generated BLIMP program code
 blimp_print_psr(fit4)         # PSR section only
-blimp_print_focal(fit4)      #  outcome section for focal analysis model only
-#rblimp::output(fit4$fit)      # full output
+blimp_print_focal(fit4)       #  outcome section for focal analysis model only
+#rblimp::output(fit4$fit)     # full output
 ```
 
 ---
@@ -238,13 +244,13 @@ fit5 <- EMAuxiliary(
   y ~ x + m + x:m + (1 + x | id),
   data = dat, id = "id", 
   aux = c("aux_cont1"),
-  burn = 1000, iter = 2000
+  burn = 800, iter = 2000
 )
 
 #cat(fit5$blimp_code)         # show generated BLIMP program code
-#blimp_print_psr(fit5)         # PSR section only
+#blimp_print_psr(fit5)        # PSR section only
 #blimp_print_focal(fit5)      #  outcome section for focal analysis model only
-#rblimp::output(fit5$fit)      # full output
+#rblimp::output(fit5$fit)     # full output
 ```
 ---
 
