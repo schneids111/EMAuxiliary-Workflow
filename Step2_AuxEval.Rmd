@@ -20,15 +20,12 @@ Auxiliary variables help make the missing-at-random (MAR) assumption more plausi
 1. Data prep for auxiliary variable evaluation: Classify each auxiliary as within-, between-, or mixed-level variables (based on ICC). Decompose and standardize variables into within- and between-person parts.  
 3. Estimate multilevel logistic models predicting missingness 
 4. Compute within- and between-level correlations between auxiliary variables and focal variables. 
-4. Generate a detailed summary table to evaluate auxiliaries.
-4. Rank auxiliaries.
+5. Generate a detailed summary table to evaluate auxiliaries.
+6. Create a heatmap to visually summarize auxiliary variable strength.
 
 **Output**  
 Produces interactive and static tables summarizing each auxiliary’s predictive utility and conceptual relevance.  
 These results guide the selection of auxiliaries to include in Step 3 (*Modeling with EMAuxiliary*).
-
-**Dependencies**  
-R (≥ 4.2), `dplyr`, `tidyr`, `lme4`, `broom.mixed`, `gt`, `DT`.
 
 For background and installation instructions, see the [README](https://github.com/schneids111/EMAuxiliary-Workflow).
 
@@ -48,6 +45,8 @@ suppressPackageStartupMessages({
   library(broom.mixed)
   library(DT)
   library(gt)
+  library(ggplot2)
+  library(patchwork)
 })
 ```
 
@@ -60,7 +59,7 @@ Each section explains **what to do**, **why it matters**, and **how to interpret
 
 > **Packages required:**  
 > Install these before running:  
-> `install.packages(c("lme4", "broom.mixed", "dplyr", "tidyr", "gt", "DT"))`
+> `install.packages(c("lme4", "broom.mixed", "dplyr", "tidyr", "gt", "DT", "patchwork"))`
 
 ---
 
@@ -76,7 +75,7 @@ Each section explains **what to do**, **why it matters**, and **how to interpret
 ```{r}
 # 🔄 EDIT THIS LINE: Replace with your real dataset path
 # Example:
-# ema_df <- read.csv("your_data.csv")
+# load ("ema_prepared.rda")
 ```
 
 ---
@@ -191,6 +190,7 @@ message("  • Focal variables (", length(focal_vars), "): ", paste(focal_vars, 
 
 **What this does:** Quantifies each auxiliary’s between-person proportion of variance.  
 **Why it matters:** We classify auxiliaries as `pure_within` (ICC < .05), `pure_between` (ICC > .95), or `mixed`.
+**Note:** Ordered factors (ordered categorical variables) should be recoded as numeric. Nominal (unordered categorical variables) should be recoded as into a series of binary numeric variables. 
 
 ```{r}
 icc_df <- data.frame()
@@ -263,9 +263,11 @@ for (var in aux_vars) {
 ## Step 5: Predict Missingness (Multilevel Logistic Models)
 
 **What this does:** For each auxiliary, estimates how strongly it predicts missingness at WP and/or PM level.  
-**Output:** Odds ratios (OR) by level.
+**This is only for internal estimation only.**
+**Results are shown in Step 7.**
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+
 logit_results <- data.frame()
 
 for (var in aux_vars) {
@@ -306,9 +308,11 @@ for (var in aux_vars) {
 ## Step 6: Correlate Auxiliaries with Focal Variables
 
 **What this does:** Computes signed **within-** and **between-person** correlations of each auxiliary with each focal variable.  
-**Why it matters:** Auxiliaries useful for imputation should relate meaningfully to model variables.
+**This is only for internal estimation only.**
+**Results are shown in Step 7.**
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+
 cor_results <- data.frame()
 
 for (aux in aux_vars) {
@@ -457,11 +461,6 @@ This visualization allows you to quickly evaluate which auxiliaries show meaning
 
 ```{r}
 ## Step 8: Split-Panel Dual Heatmap (Missingness vs. Focal Variables)
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(patchwork)
 
 # -------------------------------
 # Helper: mask by classification
