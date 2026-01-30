@@ -45,12 +45,12 @@ Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to g
 
 * 📁 **EMAuxiliary-Workflow/**
     * 📄 `README.md`
+    * 📄 `EMAuxiliary Reference Manual.pdf`
     * 📄 `Step1_PrepareEMA.Rmd`
     * 📄 `Step2_AuxEval.Rmd`
     * 📄 `Step3_ExamplesEMAuxiliary.Rmd`
     * 📁 `functions/`
         * 📄 `EMAuxiliary.R`
-        * 📄 `EMAuxiliary Reference Manual.pdf`
     * 📁 `example_output/`
         * 📄 `Step1_PrepareEMA.html`
         * 📄 `Step2_AuxEval.html`
