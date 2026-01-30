@@ -49,6 +49,44 @@ b <- function(x) x
   suppressWarnings(as.numeric(psr))
 }
 
+## Check problems with lmer formula
+.bw_validate_lmer_formula <- function(formula) {
+  ftxt <- paste(deparse(formula), collapse = " ")
+  ftxt <- gsub("\\s+", " ", ftxt)
+  
+  # Detect "( ... | ... )" anywhere (lmer RE shape)
+  has_re_shape <- grepl("\\([^()]*\\|[^()]*\\)", ftxt, perl = TRUE)
+  
+  # A) Missing '+' symptom: token immediately followed by "(...|...)"
+  # e.g., x(1|id)  or  log(1|id)
+  pat_call <- "\\b[A-Za-z.][A-Za-z0-9._]*\\s*\\([^()]*\\|[^()]*\\)"
+  if (grepl(pat_call, ftxt, perl = TRUE)) {
+    hit <- regmatches(ftxt, regexpr(pat_call, ftxt, perl = TRUE))
+    stop(
+      "[EMAuxiliary] ERROR: A random-effects term appears inside a function/variable call:\n  ",
+      hit, "\n\n",
+      "This usually means you forgot a '+' before the random effect.\n",
+      "Example fix: 'x + (1|id)' (not 'x(1|id)').",
+      call. = FALSE
+    )
+  }
+  
+  # B) Consistency: if it looks like RE syntax is present but findbars() finds none
+  fb <- lme4::findbars(formula)
+  if (has_re_shape && length(fb) == 0L) {
+    stop(
+      "[EMAuxiliary] ERROR: The formula contains something that looks like a random effect '(…|…)'\n",
+      "but lme4::findbars() did not detect any random-effects terms.\n",
+      "This often happens when a '+' was omitted or parentheses are malformed.\n",
+      "Please rewrite the formula using standard lmer syntax: y ~ ... + ( ... | cluster ).",
+      call. = FALSE
+    )
+  }
+  
+  invisible(TRUE)
+}
+
+
 ## ===== printing helpers (optional) =====
 blimp_print_psr <- function(fit_obj) {
   cat("---- PSR section ----\n")
@@ -122,6 +160,9 @@ EMAuxiliary <- function(formula, data, id,
   stopifnot(is.data.frame(data))
   if (!requireNamespace("lme4", quietly = TRUE)) stop("Install lme4.")
   if (!requireNamespace("rblimp", quietly = TRUE)) stop("Install rblimp.")
+  
+  # ---- lmer-formula sanity check ----
+  .bw_validate_lmer_formula(formula)
   
   ###########################################################################
   ### NEW BLOCK 1 — Extract all variables referenced by formula/arguments ###
