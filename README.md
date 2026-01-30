@@ -59,10 +59,6 @@ Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to g
 ## 📎 Citation and Archival Links
 GitHub repository (latest version): https://github.com/schneids111/EMAuxiliary-Workflow
 
-Permanent OSF snapshot (DOI): [to be added after upload]
-
-Please cite both GitHub and OSF entries when referencing these materials.
-
 ## 🧠 Contact
 For questions, please contact:
 Stefan Schneider, PhD, University of Southern California
