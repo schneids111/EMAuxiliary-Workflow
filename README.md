@@ -37,7 +37,8 @@ Step 1: Run relevant pieces of the notebook Step1_EMA_DataPrep.Rmd to reconstruc
 
 Step 2: Run Step2_AuxEval.Rmd using your prepared data as input. This will generate detailed information and heatmaps showing how candidate auxiliaries relate to missingness and focal model variables.
 
-Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to generate a Blimp model that includes your selected auxiliaries. Run Step3_ExamplesEMAuxiliary.Rmd for tutorial.
+Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to generate a Blimp model that includes your selected auxiliaries. Run Step3_ExamplesEMAuxiliary.Rmd for tutorial. 
+      **Use the EMAuxiliary Reference Manual for guidance.**
 
 
 ## 📦 Repository Contents
