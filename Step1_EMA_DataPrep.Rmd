@@ -387,12 +387,19 @@ ema_df <- scheduled_df %>%
 ### Case 2 – Scheduled times not available, but number of prompts per day known
 Reconstruct plausible expected prompts using **median observed times** per prompt-slot.
 
-⚠️ **Important**  
+<div style="border-left: 5px solid #d9534f; padding: 12px; background-color: #fdf2f2;">
+
+**⚠️ Important: Design Assumptions**
+This reconstruction assumes relatively stable prompt timing. It may be inappropriate for studies with flexible schedules, overlapping response windows, shift work, or time zone changes. In such cases, reconstructed prompts may be inaccurate.  
+**Please adapt this step to your EMA design.**
+
+</div>
+
+⚠️ **Note** 
 Before running this section, ensure that a dataset named `ema_df` is loaded in your R environment.  
 If you are using this tutorial with the simulated data provided above, make sure you have already executed the chunk labeled **“Optional Helper: Simulate Example EMA Data.”**
 
 This section reconstructs likely expected prompt times based on the median timing of observed prompts, assuming a fixed number of daily prompts for each participant.
-
 
 ### **User inputs**
 - `n_prompts_per_day`: fixed number of prompts per day  
@@ -404,6 +411,8 @@ This section reconstructs likely expected prompt times based on the median timin
 - `expected_datetime`: reconstructed timestamp for each expected prompt  
 - `missed_prompt` (0/1): 1 if no response observed in that slot
 
+
+⚠️ **Review the design assumptions above before running this step.**
 ```{r eval = FALSE}
 n_prompts_per_day <- 6     # number of prompts per day
 time_window_start <- 8     # first prompt window start hour (e.g., 8 AM)
