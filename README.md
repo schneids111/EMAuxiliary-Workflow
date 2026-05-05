@@ -18,6 +18,7 @@ This repository accompanies the paper:
 Each component is fully stand-alone and can be run independently, but the workflow is designed to flow from one step to the next.
 
 ---
+
 ## ⚙️ The EMAuxiliary Function
 
 The core functionality of this workflow is implemented in the EMAuxiliary() function, located in the EMAuxiliary/ folder.
@@ -29,6 +30,7 @@ The core functionality of this workflow is implemented in the EMAuxiliary() func
 The function allows users to specify models using familiar lme4-style syntax and automatically translates these into Blimp input files for estimation.
 
 ---
+
 ## 🚀 Getting Started
 
 ### 1. Installation and Requirements
@@ -51,6 +53,7 @@ Step 2: Run Step2_AuxEval.Rmd using your prepared data as input. This will gener
 Step 3: Use the EMAuxiliary() function (located in EMAuxiliary/EMAuxiliary.R) to generate a Blimp model that includes your selected auxiliaries. See Step3_ExamplesEMAuxiliary.Rmd for worked examples. 
       **Use the EMAuxiliary Reference Manual for guidance.**
 
+---
 
 ## 📊 Supplemental Materials (Reproducibility)
 
@@ -64,6 +67,7 @@ These materials are not required for typical use of the workflow, but are provid
 
 Most users can focus on Step 1–3 without using these materials.
 
+---
 
 ## 📦 Repository Contents
 
