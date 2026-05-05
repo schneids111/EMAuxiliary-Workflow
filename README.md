@@ -13,7 +13,7 @@ This repository accompanies the paper:
 |------|----------|---------------------|
 | **Step 1 – Prepare EMA Data** (`Step1_EMA_DataPrep.Rmd`) | Helps create a complete long-format EMA dataset where each scheduled prompt—completed or missed—is represented. Add rows for missed prompts, lagged variables, and person-level data. | EMA dataset with auxiliary variables |
 | **Step 2 – Evaluate Auxiliary Variables** (`Step2_AuxEval.Rmd`) | Evaluate potential auxiliary variables based on prediction of missingness and correlations with focal variables. | Auxiliary variable diagnostics |
-| **Step 3 – Fit Models with EMAuxiliary** (`Step3_ExamplesEMAuxiliary.Rmd`, `EMAuxiliary.R`, `EMAuxiliary Reference Manual.pdf`) | Incorporate selected auxiliaries into multilevel models in Blimp. | Full Blimp output and model estimates |
+| **Step 3 – Fit Models with EMAuxiliary** (`Step3_ExamplesEMAuxiliary.Rmd`) | Incorporate selected auxiliaries into multilevel models in Blimp. | Full Blimp output and model estimates |
 
 Each component is fully stand-alone and can be run independently, but the workflow is designed to flow from one step to the next.
 
@@ -45,18 +45,36 @@ Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to g
 
 * 📁 **EMAuxiliary-Workflow/**
     * 📄 `README.md`
-    * 📄 `EMAuxiliary Reference Manual.pdf`
-    * 📄 `Step1_PrepareEMA.Rmd`
-    * 📄 `Step2_AuxEval.Rmd`
-    * 📄 `Step3_ExamplesEMAuxiliary.Rmd`
-    * 📁 `functions/`
+    * 📁 `EMAuxiliary/`
         * 📄 `EMAuxiliary.R`
-    * 📁 `example_output/`
+        * 📄 `EMAuxiliary Reference Manual v0.91.pdf`
+     * 📁 `Step1/`
         * 📄 `Step1_PrepareEMA.html`
+        * 📄 `Step1_PrepareEMA.Rmd`
+     * 📁 `Step2/`
         * 📄 `Step2_AuxEval.html`
+        * 📄 `Step2_AuxEval.Rmd`
+     * 📁 `Step3/`
         * 📄 `Step3_ExamplesEMAuxiliary.html`
-
-    
+        * 📄 `Step3_ExamplesEMAuxiliary.Rmd`
+    * 📁 `Supplemental_materials/`
+           * 📁 `Empirical_example/`
+              * 📄 `ema_study_data.csv`
+                 * 📁  `Empirical_example_step2/`
+                      * 📄 `Step2_empirical.Rmd`
+                      * 📄 `Step2_empirical.html`
+                  * 📁  `Empirical_example_step3/`
+                      * 📄 `EMAux_noaux_focal_output.txt`
+                      * 📄 `EMAux_noaux_full_output.txt`
+                      * 📄 `EMAux_withaux_focal_output.txt`
+                      * 📄 `EMAux_withaux_full_output.txt`
+                      * 📄 `Step3_empirical.R`
+                  * 📁  `simulation_study/`
+                      * 📄 `01_simulate_complete_dataset.R`
+                      * 📄 `02_External_Monte_Carlo_Simulation.R`
+                      * 📄 `simulation_results_master.csv`
+                      * 📄 `simulation_summary_table.csv`
+ 
 ## 📎 Citation and Archival Links
 GitHub repository (latest version): https://github.com/schneids111/EMAuxiliary-Workflow
 
