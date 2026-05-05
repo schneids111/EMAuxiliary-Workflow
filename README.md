@@ -23,6 +23,7 @@ Each component is fully stand-alone and can be run independently, but the workfl
 The core functionality of this workflow is implemented in the EMAuxiliary() function, located in the EMAuxiliary/ folder.
 
   📄 EMAuxiliary.R -- Generates Blimp syntax for multivariate multilevel models with auxiliary variables
+  
   📄 EMAuxiliary Reference Manual -- Provides detailed documentation and trouble shooting tips
 
 The function allows users to specify models using familiar lme4-style syntax and automatically translates these into Blimp input files for estimation.
