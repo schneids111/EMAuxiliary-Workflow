@@ -71,8 +71,8 @@ Most users can focus on Step 1–3 without using these materials.
     * 📄 `EMAuxiliary.R`
     * 📄 `EMAuxiliary Reference Manual v0.91.pdf`
   * 📁 `Step1/`
-    * 📄 `Step1_PrepareEMA.html`
-    * 📄 `Step1_PrepareEMA.Rmd`
+    * 📄 `Step1_EMA_DataPrep.html`
+    * 📄 `Step1_EMA_DataPrep.Rmd`
   * 📁 `Step2/`
     * 📄 `Step2_AuxEval.html`
     * 📄 `Step2_AuxEval.Rmd`
