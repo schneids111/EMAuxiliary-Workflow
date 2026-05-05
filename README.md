@@ -58,8 +58,9 @@ The Supplemental_materials/ folder contains materials used to reproduce the empi
 
 These materials are not required for typical use of the workflow, but are provided for transparency and reproducibility.
 
-Empirical_example/ — Data and scripts for the applied example
-simulation_study/ — Code and results for the Monte Carlo simulation
+  📄 Empirical_example/ — Data and scripts for the applied example
+  
+  📄 simulation_study/ — Code and results for the Monte Carlo simulation
 
 Most users can focus on Step 1–3 without using these materials.
 
