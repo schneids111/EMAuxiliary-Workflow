@@ -1,0 +1,224 @@
+
+---------------------------------------------------------------------------
+
+                                   Blimp
+                                   4.0.2
+
+             Blimp was developed with funding from Institute of
+           Education Sciences awards R305D150056 and R305D190002.
+
+            Craig K. Enders, P.I. Email: cenders@psych.ucla.edu
+           Brian T. Keller, Co-P.I. Email: btkeller@missouri.edu
+                 Han Du, Co-P.I. Email: hdu@psych.ucla.edu
+                 Roy Levy, Co-P.I. Email: roy.levy@asu.edu
+
+              Programming and Blimp Studio by Brian T. Keller
+
+                   There is no expressed license given.
+
+---------------------------------------------------------------------------
+
+
+ALGORITHMIC OPTIONS SPECIFIED:
+
+  Imputation method:                 Fully Bayesian model-based
+  MCMC algorithm:                    Full conditional Metropolis sampler with
+                                       Auto-Derived Conditional Distributions
+  Default Priors:
+    Multilevel covariance matrices:  Zero matrix, df = -(p + 1) (PRIOR2)
+    Outcome covariance matrices:     Zero matrix, df = -(p + 1) (PRIOR2)
+    Predictor model variances:       Unit sum of squares, df = 2 (XPRIOR1)
+  Chain Starting Values:             Random starting values
+
+
+  NOTE: For complete list of priors include 'pinfo' in the options.
+
+
+BURN-IN POTENTIAL SCALE REDUCTION (PSR) OUTPUT:
+
+  NOTE: Split chain PSR is being used. This splits each chain's
+        iterations to create twice as many chains.
+
+  Comparing iterations across 4 chains     Highest PSR   Parameter #  
+                          151 to 300             1.719             5  
+                          301 to 600             1.386             7  
+                          451 to 900             1.216            14  
+                          601 to 1200            1.106            14  
+                          751 to 1500            1.069            14  
+                          901 to 1800            1.119            14  
+                         1051 to 2100            1.049             7  
+                         1201 to 2400            1.071             5  
+                         1351 to 2700            1.049             5  
+                         1501 to 3000            1.073             5  
+                         1651 to 3300            1.080             5  
+                         1801 to 3600            1.086             5  
+                         1951 to 3900            1.057             5  
+                         2101 to 4200            1.041             7  
+                         2251 to 4500            1.049             7  
+                         2401 to 4800            1.068             5  
+                         2551 to 5100            1.075             5  
+                         2701 to 5400            1.059             5  
+                         2851 to 5700            1.034            14  
+                         3001 to 6000            1.028             7  
+
+
+METROPOLIS-HASTINGS ACCEPTANCE RATES:
+
+  Chain 1:
+
+    Variable                            Type    Probability   Target Value 
+    physact1                      imputation          0.496          0.500 
+    physact1                      latent imp          0.498          0.500 
+    physact1                       parameter          0.510          0.500 
+
+  NOTE: Suppressing printing of 3 chains.
+        Use keyword 'tuneinfo' in options to override.
+
+
+DATA INFORMATION:
+
+  Level-2 identifier:       idn
+  Sample Size:              5348
+  Level-2 Clusters:         181
+  Missing Data Info:
+
+                      Pattern #:       1     2     3
+                          miss % --------------------
+                   negaff =  0.3       -     M     -  
+                 physact1 =  0.1       -     -     M  
+                                 --------------------
+                                 %  99.6   0.3   0.1
+
+
+MODEL INFORMATION:
+
+  NUMBER OF PARAMETERS
+    Outcome Models:         8
+    Predictor Models:       3
+
+  PREDICTORS
+    Incomplete continuous:  physact1
+
+  CENTERED PREDICTORS
+    Group Mean Centered:    physact1
+
+  LATENT CLUSTER MEANS
+    Grand Mean Centered:    physact1
+
+  MODELS
+    [1]  negaff ~ Intercept physact1 physact1.mean[idn] physact1*physact1.mean[idn] 
+                 | Intercept physact1
+
+
+ WARNING MESSAGES:
+
+  WARNING: 987 observations have all variables in the imputation
+           model missing. They have been dropped from data set.
+
+
+MODEL FIT:
+
+
+  INFORMATION CRITERIA
+
+    Marginal Likelihood
+      DIC2                  13166.673
+      WAIC                  13174.625
+
+    Conditional Likelihood
+      DIC2                  12530.123
+      WAIC                  12642.358
+
+
+IMPUTED DATA SUMMARIES:
+
+  NOTE: Imputed data summaries are averaged across 10000 data sets.
+
+
+Variables                              Mean     StdDev        25%        50%        75%        Min        Max 
+                                ------------------------------------------------------------------------------
+
+  negaff                              0.742      1.107      0.000      0.250      1.000     -0.846      6.000 
+  physact1                            1.276      0.972      1.000      1.000      2.000     -0.266      4.005 
+
+                                ------------------------------------------------------------------------------
+
+
+
+CORRELATIONS AMONG RESIDUALS:
+
+  No residual correlations.
+
+
+
+OUTCOME MODEL ESTIMATES:
+
+  Summaries based on 10000 iterations using 4 chains.
+  NOTE: Estimate column based on posterior median.
+
+
+Outcome Variable:  negaff     
+
+Grand Mean Centered: physact1.mean[idn]
+Group Mean Centered: physact1
+
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  L2 : Var(Intercept)                 0.615      0.070      0.498      0.770        ---        ---   6426.924 
+  L2 : Cov(physact1,Intercept)        0.045      0.015      0.018      0.077        ---        ---   2830.078 
+  L2 : Var(physact1)                  0.027      0.006      0.018      0.040        ---        ---   1474.722 
+  Residual Var.                       0.596      0.012      0.574      0.620        ---        ---   8354.834 
+
+Coefficients:                   
+  Intercept                           0.751      0.058      0.630      0.857    168.483      0.000    176.776 
+  physact1                            0.057      0.018      0.022      0.093     10.037      0.002   1730.957 
+  physact1.mean[idn]                 -0.252      0.176     -0.575      0.113      1.953      0.162    118.248 
+  physact1*physact1.mean[idn]        -0.089      0.054     -0.197      0.018      2.641      0.104   1145.929 
+
+Standard Deviations:            
+  L2 : SD(Intercept)                  0.784      0.044      0.706      0.877        ---        ---   6366.386 
+  L2 : Cor(physact1,Intercept)        0.354      0.102      0.146      0.544        ---        ---   2474.934 
+  L2 : SD(physact1)                   0.165      0.017      0.133      0.201        ---        ---   1445.706 
+  Residual SD                         0.772      0.008      0.757      0.787        ---        ---   8356.393 
+
+Standardized Coefficients:      
+  physact1                            0.046      0.015      0.017      0.075      9.991      0.002   1737.430 
+  physact1.mean[idn]                 -0.084      0.058     -0.187      0.037      1.985      0.159    118.404 
+  physact1*physact1.mean[idn]        -0.025      0.016     -0.056      0.005      2.645      0.104   1219.373 
+
+Proportion Variance Explained   
+  by Coefficients                     0.010      0.010      0.001      0.039        ---        ---    149.286 
+  by Level-2 Random Intercepts        0.492      0.029      0.439      0.550        ---        ---   2684.786 
+  by Level-2 Random Slopes            0.017      0.004      0.011      0.026        ---        ---   1504.415 
+  by Level-1 Residual Variation       0.477      0.027      0.423      0.528        ---        ---   4692.872 
+
+                                ------------------------------------------------------------------------------
+
+
+
+
+PREDICTOR MODEL ESTIMATES:
+
+  Summaries based on 10000 iterations using 4 chains.
+  NOTE: Estimate column based on posterior median.
+
+
+
+Missing predictor:  physact1   
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+
+Grand Mean                            1.269      0.032      1.206      1.333   1554.057      0.000    872.533 
+
+Level 1:                                                                                                      
+  Residual Var.                       0.808      0.016      0.778      0.840        ---        ---   8103.979 
+
+Level 2:                                                                                                      
+  Residual Var.                       0.144      0.018      0.114      0.184        ---        ---   2965.265 
+                                                                                                              
+                                ------------------------------------------------------------------------------
+
+

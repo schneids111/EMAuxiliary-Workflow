@@ -1,0 +1,42 @@
+Outcome Variable:  negaff     
+
+Grand Mean Centered: physact1.mean[idn]
+Group Mean Centered: physact1
+
+
+Parameters                         Estimate     StdDev       2.5%      97.5%      ChiSq     PValue      N_Eff 
+                                ------------------------------------------------------------------------------
+Variances:                      
+  L2 : Var(Intercept)                 0.615      0.070      0.498      0.770        ---        ---   6426.924 
+  L2 : Cov(physact1,Intercept)        0.045      0.015      0.018      0.077        ---        ---   2830.078 
+  L2 : Var(physact1)                  0.027      0.006      0.018      0.040        ---        ---   1474.722 
+  Residual Var.                       0.596      0.012      0.574      0.620        ---        ---   8354.834 
+
+Coefficients:                   
+  Intercept                           0.751      0.058      0.630      0.857    168.483      0.000    176.776 
+  physact1                            0.057      0.018      0.022      0.093     10.037      0.002   1730.957 
+  physact1.mean[idn]                 -0.252      0.176     -0.575      0.113      1.953      0.162    118.248 
+  physact1*physact1.mean[idn]        -0.089      0.054     -0.197      0.018      2.641      0.104   1145.929 
+
+Standard Deviations:            
+  L2 : SD(Intercept)                  0.784      0.044      0.706      0.877        ---        ---   6366.386 
+  L2 : Cor(physact1,Intercept)        0.354      0.102      0.146      0.544        ---        ---   2474.934 
+  L2 : SD(physact1)                   0.165      0.017      0.133      0.201        ---        ---   1445.706 
+  Residual SD                         0.772      0.008      0.757      0.787        ---        ---   8356.393 
+
+Standardized Coefficients:      
+  physact1                            0.046      0.015      0.017      0.075      9.991      0.002   1737.430 
+  physact1.mean[idn]                 -0.084      0.058     -0.187      0.037      1.985      0.159    118.404 
+  physact1*physact1.mean[idn]        -0.025      0.016     -0.056      0.005      2.645      0.104   1219.373 
+
+Proportion Variance Explained   
+  by Coefficients                     0.010      0.010      0.001      0.039        ---        ---    149.286 
+  by Level-2 Random Intercepts        0.492      0.029      0.439      0.550        ---        ---   2684.786 
+  by Level-2 Random Slopes            0.017      0.004      0.011      0.026        ---        ---   1504.415 
+  by Level-1 Residual Variation       0.477      0.027      0.423      0.528        ---        ---   4692.872 
+
+                                ------------------------------------------------------------------------------
+
+
+
+ 
