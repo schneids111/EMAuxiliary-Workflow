@@ -18,7 +18,16 @@ This repository accompanies the paper:
 Each component is fully stand-alone and can be run independently, but the workflow is designed to flow from one step to the next.
 
 ---
+⚙️ The EMAuxiliary Function
 
+The core functionality of this workflow is implemented in the EMAuxiliary() function, located in the EMAuxiliary/ folder.
+
+📄 EMAuxiliary.R — Generates Blimp syntax for multivariate multilevel models with auxiliary variables
+📄 EMAuxiliary Reference Manual — Provides detailed documentation, arguments, and examples
+
+The function allows users to specify models using familiar lme4-style syntax and automatically translates these into Blimp input files for estimation.
+
+---
 ## 🚀 Getting Started
 
 ### 1. Installation and Requirements
@@ -31,14 +40,27 @@ Each component is fully stand-alone and can be run independently, but the workfl
   ```r
   source("https://raw.githubusercontent.com/schneids111/EMAuxiliary-Workflow/main/EMAuxiliary/EMAuxiliary.R")
 
+
 ### 2. Using the Tutorials
    
 Step 1: Run relevant pieces of the notebook Step1_EMA_DataPrep.Rmd to reconstruct or simulate your EMA dataset.
 
 Step 2: Run Step2_AuxEval.Rmd using your prepared data as input. This will generate detailed information and heatmaps showing how candidate auxiliaries relate to missingness and focal model variables.
 
-Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to generate a Blimp model that includes your selected auxiliaries. Run Step3_ExamplesEMAuxiliary.Rmd for tutorial. 
+Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to generate a Blimp model that includes your selected auxiliaries. See Step3_ExamplesEMAuxiliary.Rmd for worked examples. 
       **Use the EMAuxiliary Reference Manual for guidance.**
+
+
+📊 Supplemental Materials (Reproducibility)
+
+The Supplemental_materials/ folder contains materials used to reproduce the empirical example and simulation study reported in the manuscript.
+
+These materials are not required for typical use of the workflow, but are provided for transparency and reproducibility.
+
+Empirical_example/ — Data and scripts for the applied example
+simulation_study/ — Code and results for the Monte Carlo simulation
+
+Most users can focus on Step 1–3 without using these materials.
 
 
 ## 📦 Repository Contents
