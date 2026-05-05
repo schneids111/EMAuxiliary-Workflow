@@ -18,7 +18,7 @@ This repository accompanies the paper:
 Each component is fully stand-alone and can be run independently, but the workflow is designed to flow from one step to the next.
 
 ---
-⚙️ The EMAuxiliary Function
+## ⚙️ The EMAuxiliary Function
 
 The core functionality of this workflow is implemented in the EMAuxiliary() function, located in the EMAuxiliary/ folder.
 
@@ -51,7 +51,7 @@ Step 3: Use the EMAuxiliary() function (located in functions/EMAuxiliary.R) to g
       **Use the EMAuxiliary Reference Manual for guidance.**
 
 
-📊 Supplemental Materials (Reproducibility)
+## 📊 Supplemental Materials (Reproducibility)
 
 The Supplemental_materials/ folder contains materials used to reproduce the empirical example and simulation study reported in the manuscript.
 
