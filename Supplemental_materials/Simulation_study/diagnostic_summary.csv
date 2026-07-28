@@ -1,0 +1,5 @@
+"model_type","n_fits","n_completed","n_errors","n_nonzero_exit","median_final_psr_core","maximum_final_psr_core","proportion_final_psr_core_below_1_05","proportion_final_psr_core_below_1_10","median_min_ess_core","minimum_ess_core","proportion_min_ess_core_above_100","median_elapsed_minutes"
+"2_blimp_complete",1000,1000,0,0,1.025,1.1115,0.951,0.999,84.03645,14.668,0.259,0.792661559581757
+"4_blimp_lmc_noaux",1000,1000,0,0,1.0153,1.0499,1,1,140.45995,33.2341,0.866,0.472369317213694
+"5_blimp_omc_aux",1000,1000,0,0,1.035,1.1247,0.826,0.998,59.06845,15.0785,0.029,1.4462217092639
+"6_blimp_rescue",1000,1000,0,0,1.04055,1.1149,0.74,0.998,48.6184,13.9055,0.01,2.00757016753682
