@@ -99,9 +99,11 @@ Most users can focus on Step 1–3 without using these materials.
         * 📄 `Step3_empirical.R`
     * 📁 `simulation_study/`
       * 📄 `01_simulate_complete_dataset.R`
-      * 📄 `02_External_Monte_Carlo_Simulation.R`
-      * 📄 `simulation_results_master.csv`
-      * 📄 `simulation_summary_table.csv`
+      * 📄 `02_Monte_Carlo_Simulation.R`
+      * 📄 `blimp_diagnostics_details.csv`
+      * 📄 `diagnostic_summary.csv`
+      * 📄 `simulation_results_details.csv`
+      * 📄 `simulation_summary.csv`
  
 ## 📎 Citation and Archival Links
 GitHub repository (latest version): https://github.com/schneids111/EMAuxiliary-Workflow
