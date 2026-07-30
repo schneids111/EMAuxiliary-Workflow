@@ -88,6 +88,7 @@ Most users can focus on Step 1–3 without using these materials.
   * 📁 `Supplemental_materials/`
     * 📁 `Empirical_example/`
       * 📄 `ema_study_data.csv`
+      * 📄 `ema_study_variable_codebook.csv`
       * 📁 `Empirical_example_step2/`
         * 📄 `Step2_empirical.Rmd`
         * 📄 `Step2_empirical.html`
