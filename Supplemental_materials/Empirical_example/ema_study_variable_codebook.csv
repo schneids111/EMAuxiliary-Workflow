@@ -1,0 +1,22 @@
+Variable,Description
+ACC_NSteps,"recorded steps per minute, standardized"
+day_n,day of study
+physact1,physical activity
+trigger_hr_ce,"time of day, standardized"
+trigger_hr_sin,"time of day, cosine transformed"
+negaff,negative affect
+lag_missing,"lagged missed prompt, standardized"
+lag_posaff,"lagged positive affect, standardized"
+lag_physact2,"lagged sedentary behavior, standardized"
+lag_delay,"lagged prompt delay, standardized"
+lag_response_time,"lagged completion time, standardized"
+lag_negaff_ce,"lagged negative affect, within-person centered, standardized"
+lag_physact1_ce,"lagged physical activity, within-person centered, standardized"
+weekend,"weekend versus weekday (binary; weekend = 1, weekday = 0)"
+std_negaff,"Intraindividual standard deviation (iSD) of negative affect, standardized"
+std_physact1,"Intraindividual standard deviation (iSD) of physical activity, standardized"
+age,"age, standardized"
+male,"sex (binary; male = 1, female = 2)"
+BMI,"body mass index, standardized"
+idn,identification number
+missing,missing value flag
