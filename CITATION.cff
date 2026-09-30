@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+message: "If you use these materials, please cite the accompanying article."
+title: "EMAuxiliary Workflow"
+version: "1.0.0"
+date-released: "2026-09-29"
+repository-code: "https://github.com/schneids111/EMAuxiliary-Workflow"
+
+authors:
+  - family-names: "Schneider"
+    given-names: "Stefan"
+  - family-names: "Walentynowicz"
+    given-names: "Marta"
+  - family-names: "Toledo"
+    given-names: "Meynard J."
+  - family-names: "Hernandez"
+    given-names: "Raymond"
+  - family-names: "Junghaenel"
+    given-names: "Doerte U."
+  - family-names: "Smyth"
+    given-names: "Joshua M."
+  - family-names: "Stone"
+    given-names: "Arthur A."
+
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Schneider"
+      given-names: "Stefan"
+    - family-names: "Walentynowicz"
+      given-names: "Marta"
+    - family-names: "Toledo"
+      given-names: "Meynard J."
+    - family-names: "Hernandez"
+      given-names: "Raymond"
+    - family-names: "Junghaenel"
+      given-names: "Doerte U."
+    - family-names: "Smyth"
+      given-names: "Joshua M."
+    - family-names: "Stone"
+      given-names: "Arthur A."
+  title: "Addressing Missing Data From Prompt Noncompliance: A Practical Guide to Auxiliary Variables in Ecological Momentary Assessment"
+  journal: "Advances in Methods and Practices in Psychological Science"
+  year: 2026
+  volume: 9
+  issue: 3
+  doi: "10.1177/25152459261479197"
