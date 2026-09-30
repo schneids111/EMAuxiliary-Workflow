@@ -111,6 +111,7 @@ Most users can focus on Step 1–3 without using these materials.
  
 ## 📎 Citation and Archival Links
 > GitHub repository (latest version): https://github.com/schneids111/EMAuxiliary-Workflow
+> 
 > Article DOI: 10.1177/25152459261479197
 
 ## 🧠 Contact
