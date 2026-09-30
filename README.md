@@ -2,7 +2,10 @@
 
 This repository accompanies the paper:
 
-> **Schneider, S., Walentynowicz, M., Toledo, M., Hernandez, R., Junghaenel, D.U., Smyth, J.M., Stone, A.A. (under review). Using auxiliary variables to reduce bias from missing EMA prompts: a practical guide. Advances in Methods and Practices in Psychological Science. [Full citation will be updated upon publication.]**  
+> **Schneider, S., Walentynowicz, M., Toledo, M., Hernandez, R., Junghaenel, D.U., Smyth, J.M., Stone, A.A. (2026). Using auxiliary variables to reduce bias from missing EMA prompts: a practical guide. Advances in Methods and Practices in Psychological Science, 9(3). DOI: 10.1177/25152459261479197.**
+
+> **[Published article](https://doi.org/10.1177/25152459261479197)**
+
 > The workflow provides a three-step pipeline for preparing ecological momentary assessment (EMA) datasets, evaluating potential auxiliary variables, and incorporating them into multivariate multilevel models using the **EMAuxiliary** R function (which generates **Blimp** input code for auxiliary-variable modeling).
 
 ---
@@ -108,6 +111,7 @@ Most users can focus on Step 1–3 without using these materials.
  
 ## 📎 Citation and Archival Links
 GitHub repository (latest version): https://github.com/schneids111/EMAuxiliary-Workflow
+Article DOI: 10.1177/25152459261479197
 
 ## 🧠 Contact
 For questions, please contact:
